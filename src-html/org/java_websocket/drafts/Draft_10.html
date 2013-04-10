@@ -1,0 +1,464 @@
+<HTML>
+<BODY BGCOLOR="white">
+<PRE>
+<FONT color="green">001</FONT>    package org.java_websocket.drafts;<a name="line.1"></a>
+<FONT color="green">002</FONT>    import java.math.BigInteger;<a name="line.2"></a>
+<FONT color="green">003</FONT>    import java.nio.ByteBuffer;<a name="line.3"></a>
+<FONT color="green">004</FONT>    import java.security.MessageDigest;<a name="line.4"></a>
+<FONT color="green">005</FONT>    import java.security.NoSuchAlgorithmException;<a name="line.5"></a>
+<FONT color="green">006</FONT>    import java.util.Collections;<a name="line.6"></a>
+<FONT color="green">007</FONT>    import java.util.LinkedList;<a name="line.7"></a>
+<FONT color="green">008</FONT>    import java.util.List;<a name="line.8"></a>
+<FONT color="green">009</FONT>    import java.util.Random;<a name="line.9"></a>
+<FONT color="green">010</FONT>    <a name="line.10"></a>
+<FONT color="green">011</FONT>    import org.java_websocket.WebSocket.Role;<a name="line.11"></a>
+<FONT color="green">012</FONT>    import org.java_websocket.exceptions.InvalidDataException;<a name="line.12"></a>
+<FONT color="green">013</FONT>    import org.java_websocket.exceptions.InvalidFrameException;<a name="line.13"></a>
+<FONT color="green">014</FONT>    import org.java_websocket.exceptions.InvalidHandshakeException;<a name="line.14"></a>
+<FONT color="green">015</FONT>    import org.java_websocket.exceptions.LimitExedeedException;<a name="line.15"></a>
+<FONT color="green">016</FONT>    import org.java_websocket.exceptions.NotSendableException;<a name="line.16"></a>
+<FONT color="green">017</FONT>    import org.java_websocket.framing.CloseFrameBuilder;<a name="line.17"></a>
+<FONT color="green">018</FONT>    import org.java_websocket.framing.FrameBuilder;<a name="line.18"></a>
+<FONT color="green">019</FONT>    import org.java_websocket.framing.Framedata;<a name="line.19"></a>
+<FONT color="green">020</FONT>    import org.java_websocket.framing.Framedata.Opcode;<a name="line.20"></a>
+<FONT color="green">021</FONT>    import org.java_websocket.framing.FramedataImpl1;<a name="line.21"></a>
+<FONT color="green">022</FONT>    import org.java_websocket.handshake.ClientHandshake;<a name="line.22"></a>
+<FONT color="green">023</FONT>    import org.java_websocket.handshake.ClientHandshakeBuilder;<a name="line.23"></a>
+<FONT color="green">024</FONT>    import org.java_websocket.handshake.HandshakeBuilder;<a name="line.24"></a>
+<FONT color="green">025</FONT>    import org.java_websocket.handshake.Handshakedata;<a name="line.25"></a>
+<FONT color="green">026</FONT>    import org.java_websocket.handshake.ServerHandshake;<a name="line.26"></a>
+<FONT color="green">027</FONT>    import org.java_websocket.handshake.ServerHandshakeBuilder;<a name="line.27"></a>
+<FONT color="green">028</FONT>    import org.java_websocket.util.Base64;<a name="line.28"></a>
+<FONT color="green">029</FONT>    import org.java_websocket.util.Charsetfunctions;<a name="line.29"></a>
+<FONT color="green">030</FONT>    <a name="line.30"></a>
+<FONT color="green">031</FONT>    public class Draft_10 extends Draft {<a name="line.31"></a>
+<FONT color="green">032</FONT>    <a name="line.32"></a>
+<FONT color="green">033</FONT>            private class IncompleteException extends Throwable {<a name="line.33"></a>
+<FONT color="green">034</FONT>                    <a name="line.34"></a>
+<FONT color="green">035</FONT>                    /**<a name="line.35"></a>
+<FONT color="green">036</FONT>                     * It's Serializable.<a name="line.36"></a>
+<FONT color="green">037</FONT>                     */<a name="line.37"></a>
+<FONT color="green">038</FONT>                    private static final long serialVersionUID = 7330519489840500997L;<a name="line.38"></a>
+<FONT color="green">039</FONT>                    <a name="line.39"></a>
+<FONT color="green">040</FONT>                    <a name="line.40"></a>
+<FONT color="green">041</FONT>                    private int preferedsize;<a name="line.41"></a>
+<FONT color="green">042</FONT>                    public IncompleteException( int preferedsize ) {<a name="line.42"></a>
+<FONT color="green">043</FONT>                            this.preferedsize = preferedsize;<a name="line.43"></a>
+<FONT color="green">044</FONT>                    }<a name="line.44"></a>
+<FONT color="green">045</FONT>                    public int getPreferedSize() {<a name="line.45"></a>
+<FONT color="green">046</FONT>                            return preferedsize;<a name="line.46"></a>
+<FONT color="green">047</FONT>                    }<a name="line.47"></a>
+<FONT color="green">048</FONT>            }<a name="line.48"></a>
+<FONT color="green">049</FONT>    <a name="line.49"></a>
+<FONT color="green">050</FONT>            public static int readVersion( Handshakedata handshakedata ) {<a name="line.50"></a>
+<FONT color="green">051</FONT>                    String vers = handshakedata.getFieldValue( "Sec-WebSocket-Version" );<a name="line.51"></a>
+<FONT color="green">052</FONT>                    if( vers.length() &gt; 0 ) {<a name="line.52"></a>
+<FONT color="green">053</FONT>                            int v;<a name="line.53"></a>
+<FONT color="green">054</FONT>                            try {<a name="line.54"></a>
+<FONT color="green">055</FONT>                                    v = new Integer( vers.trim() );<a name="line.55"></a>
+<FONT color="green">056</FONT>                                    return v;<a name="line.56"></a>
+<FONT color="green">057</FONT>                            } catch ( NumberFormatException e ) {<a name="line.57"></a>
+<FONT color="green">058</FONT>                                    return -1;<a name="line.58"></a>
+<FONT color="green">059</FONT>                            }<a name="line.59"></a>
+<FONT color="green">060</FONT>                    }<a name="line.60"></a>
+<FONT color="green">061</FONT>                    return -1;<a name="line.61"></a>
+<FONT color="green">062</FONT>            }<a name="line.62"></a>
+<FONT color="green">063</FONT>    <a name="line.63"></a>
+<FONT color="green">064</FONT>            private ByteBuffer incompleteframe;<a name="line.64"></a>
+<FONT color="green">065</FONT>            private Framedata fragmentedframe = null;<a name="line.65"></a>
+<FONT color="green">066</FONT>            <a name="line.66"></a>
+<FONT color="green">067</FONT>            private final Random reuseableRandom = new Random();<a name="line.67"></a>
+<FONT color="green">068</FONT>    <a name="line.68"></a>
+<FONT color="green">069</FONT>            @Override<a name="line.69"></a>
+<FONT color="green">070</FONT>            public HandshakeState acceptHandshakeAsClient( ClientHandshake request, ServerHandshake response ) throws InvalidHandshakeException {<a name="line.70"></a>
+<FONT color="green">071</FONT>                    if( !request.hasFieldValue( "Sec-WebSocket-Key" ) || !response.hasFieldValue( "Sec-WebSocket-Accept" ) )<a name="line.71"></a>
+<FONT color="green">072</FONT>                            return HandshakeState.NOT_MATCHED;<a name="line.72"></a>
+<FONT color="green">073</FONT>    <a name="line.73"></a>
+<FONT color="green">074</FONT>                    String seckey_answere = response.getFieldValue( "Sec-WebSocket-Accept" );<a name="line.74"></a>
+<FONT color="green">075</FONT>                    String seckey_challenge = request.getFieldValue( "Sec-WebSocket-Key" );<a name="line.75"></a>
+<FONT color="green">076</FONT>                    seckey_challenge = generateFinalKey( seckey_challenge );<a name="line.76"></a>
+<FONT color="green">077</FONT>    <a name="line.77"></a>
+<FONT color="green">078</FONT>                    if( seckey_challenge.equals( seckey_answere ) )<a name="line.78"></a>
+<FONT color="green">079</FONT>                            return HandshakeState.MATCHED;<a name="line.79"></a>
+<FONT color="green">080</FONT>                    return HandshakeState.NOT_MATCHED;<a name="line.80"></a>
+<FONT color="green">081</FONT>            }<a name="line.81"></a>
+<FONT color="green">082</FONT>    <a name="line.82"></a>
+<FONT color="green">083</FONT>            @Override<a name="line.83"></a>
+<FONT color="green">084</FONT>            public HandshakeState acceptHandshakeAsServer( ClientHandshake handshakedata ) throws InvalidHandshakeException {<a name="line.84"></a>
+<FONT color="green">085</FONT>                    // Sec-WebSocket-Origin is only required for browser clients<a name="line.85"></a>
+<FONT color="green">086</FONT>                    int v = readVersion( handshakedata );<a name="line.86"></a>
+<FONT color="green">087</FONT>                    if( v == 7 || v == 8 )// g<a name="line.87"></a>
+<FONT color="green">088</FONT>                            return basicAccept( handshakedata ) ? HandshakeState.MATCHED : HandshakeState.NOT_MATCHED;<a name="line.88"></a>
+<FONT color="green">089</FONT>                    return HandshakeState.NOT_MATCHED;<a name="line.89"></a>
+<FONT color="green">090</FONT>            }<a name="line.90"></a>
+<FONT color="green">091</FONT>    <a name="line.91"></a>
+<FONT color="green">092</FONT>            @Override<a name="line.92"></a>
+<FONT color="green">093</FONT>            public ByteBuffer createBinaryFrame( Framedata framedata ) {<a name="line.93"></a>
+<FONT color="green">094</FONT>                    ByteBuffer mes = framedata.getPayloadData();<a name="line.94"></a>
+<FONT color="green">095</FONT>                    boolean mask = role == Role.CLIENT; // framedata.getTransfereMasked();<a name="line.95"></a>
+<FONT color="green">096</FONT>                    int sizebytes = mes.remaining() &lt;= 125 ? 1 : mes.remaining() &lt;= 65535 ? 2 : 8;<a name="line.96"></a>
+<FONT color="green">097</FONT>                    ByteBuffer buf = ByteBuffer.allocate( 1 + ( sizebytes &gt; 1 ? sizebytes + 1 : sizebytes ) + ( mask ? 4 : 0 ) + mes.remaining() );<a name="line.97"></a>
+<FONT color="green">098</FONT>                    byte optcode = fromOpcode( framedata.getOpcode() );<a name="line.98"></a>
+<FONT color="green">099</FONT>                    byte one = (byte) ( framedata.isFin() ? -128 : 0 );<a name="line.99"></a>
+<FONT color="green">100</FONT>                    one |= optcode;<a name="line.100"></a>
+<FONT color="green">101</FONT>                    buf.put( one );<a name="line.101"></a>
+<FONT color="green">102</FONT>                    byte[] payloadlengthbytes = toByteArray( mes.remaining(), sizebytes );<a name="line.102"></a>
+<FONT color="green">103</FONT>                    assert ( payloadlengthbytes.length == sizebytes );<a name="line.103"></a>
+<FONT color="green">104</FONT>    <a name="line.104"></a>
+<FONT color="green">105</FONT>                    if( sizebytes == 1 ) {<a name="line.105"></a>
+<FONT color="green">106</FONT>                            buf.put( (byte) ( (byte) payloadlengthbytes[ 0 ] | ( mask ? (byte) -128 : 0 ) ) );<a name="line.106"></a>
+<FONT color="green">107</FONT>                    } else if( sizebytes == 2 ) {<a name="line.107"></a>
+<FONT color="green">108</FONT>                            buf.put( (byte) ( (byte) 126 | ( mask ? (byte) -128 : 0 ) ) );<a name="line.108"></a>
+<FONT color="green">109</FONT>                            buf.put( payloadlengthbytes );<a name="line.109"></a>
+<FONT color="green">110</FONT>                    } else if( sizebytes == 8 ) {<a name="line.110"></a>
+<FONT color="green">111</FONT>                            buf.put( (byte) ( (byte) 127 | ( mask ? (byte) -128 : 0 ) ) );<a name="line.111"></a>
+<FONT color="green">112</FONT>                            buf.put( payloadlengthbytes );<a name="line.112"></a>
+<FONT color="green">113</FONT>                    } else<a name="line.113"></a>
+<FONT color="green">114</FONT>                            throw new RuntimeException( "Size representation not supported/specified" );<a name="line.114"></a>
+<FONT color="green">115</FONT>    <a name="line.115"></a>
+<FONT color="green">116</FONT>                    if( mask ) {<a name="line.116"></a>
+<FONT color="green">117</FONT>                            ByteBuffer maskkey = ByteBuffer.allocate( 4 );<a name="line.117"></a>
+<FONT color="green">118</FONT>                            maskkey.putInt( reuseableRandom.nextInt() );<a name="line.118"></a>
+<FONT color="green">119</FONT>                            buf.put( maskkey.array() );<a name="line.119"></a>
+<FONT color="green">120</FONT>                            for( int i = 0 ; i &lt; mes.limit() ; i++ ) {<a name="line.120"></a>
+<FONT color="green">121</FONT>                                    buf.put( (byte) ( mes.get() ^ maskkey.get( i % 4 ) ) );<a name="line.121"></a>
+<FONT color="green">122</FONT>                            }<a name="line.122"></a>
+<FONT color="green">123</FONT>                    } else<a name="line.123"></a>
+<FONT color="green">124</FONT>                            buf.put( mes );<a name="line.124"></a>
+<FONT color="green">125</FONT>                    // translateFrame ( buf.array () , buf.array ().length );<a name="line.125"></a>
+<FONT color="green">126</FONT>                    assert ( buf.remaining() == 0 ) : buf.remaining();<a name="line.126"></a>
+<FONT color="green">127</FONT>                    buf.flip();<a name="line.127"></a>
+<FONT color="green">128</FONT>    <a name="line.128"></a>
+<FONT color="green">129</FONT>                    return buf;<a name="line.129"></a>
+<FONT color="green">130</FONT>            }<a name="line.130"></a>
+<FONT color="green">131</FONT>    <a name="line.131"></a>
+<FONT color="green">132</FONT>            @Override<a name="line.132"></a>
+<FONT color="green">133</FONT>            public List&lt;Framedata&gt; createFrames( ByteBuffer binary, boolean mask ) {<a name="line.133"></a>
+<FONT color="green">134</FONT>                    FrameBuilder curframe = new FramedataImpl1();<a name="line.134"></a>
+<FONT color="green">135</FONT>                    try {<a name="line.135"></a>
+<FONT color="green">136</FONT>                            curframe.setPayload( binary );<a name="line.136"></a>
+<FONT color="green">137</FONT>                    } catch ( InvalidDataException e ) {<a name="line.137"></a>
+<FONT color="green">138</FONT>                            throw new NotSendableException( e );<a name="line.138"></a>
+<FONT color="green">139</FONT>                    }<a name="line.139"></a>
+<FONT color="green">140</FONT>                    curframe.setFin( true );<a name="line.140"></a>
+<FONT color="green">141</FONT>                    curframe.setOptcode( Opcode.BINARY );<a name="line.141"></a>
+<FONT color="green">142</FONT>                    curframe.setTransferemasked( mask );<a name="line.142"></a>
+<FONT color="green">143</FONT>                    return Collections.singletonList( (Framedata) curframe );<a name="line.143"></a>
+<FONT color="green">144</FONT>            }<a name="line.144"></a>
+<FONT color="green">145</FONT>    <a name="line.145"></a>
+<FONT color="green">146</FONT>            @Override<a name="line.146"></a>
+<FONT color="green">147</FONT>            public List&lt;Framedata&gt; createFrames( String text, boolean mask ) {<a name="line.147"></a>
+<FONT color="green">148</FONT>                    FrameBuilder curframe = new FramedataImpl1();<a name="line.148"></a>
+<FONT color="green">149</FONT>                    try {<a name="line.149"></a>
+<FONT color="green">150</FONT>                            curframe.setPayload( ByteBuffer.wrap( Charsetfunctions.utf8Bytes( text ) ) );<a name="line.150"></a>
+<FONT color="green">151</FONT>                    } catch ( InvalidDataException e ) {<a name="line.151"></a>
+<FONT color="green">152</FONT>                            throw new NotSendableException( e );<a name="line.152"></a>
+<FONT color="green">153</FONT>                    }<a name="line.153"></a>
+<FONT color="green">154</FONT>                    curframe.setFin( true );<a name="line.154"></a>
+<FONT color="green">155</FONT>                    curframe.setOptcode( Opcode.TEXT );<a name="line.155"></a>
+<FONT color="green">156</FONT>                    curframe.setTransferemasked( mask );<a name="line.156"></a>
+<FONT color="green">157</FONT>                    return Collections.singletonList( (Framedata) curframe );<a name="line.157"></a>
+<FONT color="green">158</FONT>            }<a name="line.158"></a>
+<FONT color="green">159</FONT>    <a name="line.159"></a>
+<FONT color="green">160</FONT>            private byte fromOpcode( Opcode opcode ) {<a name="line.160"></a>
+<FONT color="green">161</FONT>                    if( opcode == Opcode.CONTINUOUS )<a name="line.161"></a>
+<FONT color="green">162</FONT>                            return 0;<a name="line.162"></a>
+<FONT color="green">163</FONT>                    else if( opcode == Opcode.TEXT )<a name="line.163"></a>
+<FONT color="green">164</FONT>                            return 1;<a name="line.164"></a>
+<FONT color="green">165</FONT>                    else if( opcode == Opcode.BINARY )<a name="line.165"></a>
+<FONT color="green">166</FONT>                            return 2;<a name="line.166"></a>
+<FONT color="green">167</FONT>                    else if( opcode == Opcode.CLOSING )<a name="line.167"></a>
+<FONT color="green">168</FONT>                            return 8;<a name="line.168"></a>
+<FONT color="green">169</FONT>                    else if( opcode == Opcode.PING )<a name="line.169"></a>
+<FONT color="green">170</FONT>                            return 9;<a name="line.170"></a>
+<FONT color="green">171</FONT>                    else if( opcode == Opcode.PONG )<a name="line.171"></a>
+<FONT color="green">172</FONT>                            return 10;<a name="line.172"></a>
+<FONT color="green">173</FONT>                    throw new RuntimeException( "Don't know how to handle " + opcode.toString() );<a name="line.173"></a>
+<FONT color="green">174</FONT>            }<a name="line.174"></a>
+<FONT color="green">175</FONT>    <a name="line.175"></a>
+<FONT color="green">176</FONT>            private String generateFinalKey( String in ) {<a name="line.176"></a>
+<FONT color="green">177</FONT>                    String seckey = in.trim();<a name="line.177"></a>
+<FONT color="green">178</FONT>                    String acc = seckey + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";<a name="line.178"></a>
+<FONT color="green">179</FONT>                    MessageDigest sh1;<a name="line.179"></a>
+<FONT color="green">180</FONT>                    try {<a name="line.180"></a>
+<FONT color="green">181</FONT>                            sh1 = MessageDigest.getInstance( "SHA1" );<a name="line.181"></a>
+<FONT color="green">182</FONT>                    } catch ( NoSuchAlgorithmException e ) {<a name="line.182"></a>
+<FONT color="green">183</FONT>                            throw new RuntimeException( e );<a name="line.183"></a>
+<FONT color="green">184</FONT>                    }<a name="line.184"></a>
+<FONT color="green">185</FONT>                    return Base64.encodeBytes( sh1.digest( acc.getBytes() ) );<a name="line.185"></a>
+<FONT color="green">186</FONT>            }<a name="line.186"></a>
+<FONT color="green">187</FONT>    <a name="line.187"></a>
+<FONT color="green">188</FONT>            @Override<a name="line.188"></a>
+<FONT color="green">189</FONT>            public ClientHandshakeBuilder postProcessHandshakeRequestAsClient( ClientHandshakeBuilder request ) {<a name="line.189"></a>
+<FONT color="green">190</FONT>                    request.put( "Upgrade", "websocket" );<a name="line.190"></a>
+<FONT color="green">191</FONT>                    request.put( "Connection", "Upgrade" ); // to respond to a Connection keep alives<a name="line.191"></a>
+<FONT color="green">192</FONT>                    request.put( "Sec-WebSocket-Version", "8" );<a name="line.192"></a>
+<FONT color="green">193</FONT>    <a name="line.193"></a>
+<FONT color="green">194</FONT>                    byte[] random = new byte[ 16 ];<a name="line.194"></a>
+<FONT color="green">195</FONT>                    reuseableRandom.nextBytes( random );<a name="line.195"></a>
+<FONT color="green">196</FONT>                    request.put( "Sec-WebSocket-Key", Base64.encodeBytes( random ) );<a name="line.196"></a>
+<FONT color="green">197</FONT>    <a name="line.197"></a>
+<FONT color="green">198</FONT>                    return request;<a name="line.198"></a>
+<FONT color="green">199</FONT>            }<a name="line.199"></a>
+<FONT color="green">200</FONT>    <a name="line.200"></a>
+<FONT color="green">201</FONT>            @Override<a name="line.201"></a>
+<FONT color="green">202</FONT>            public HandshakeBuilder postProcessHandshakeResponseAsServer( ClientHandshake request, ServerHandshakeBuilder response ) throws InvalidHandshakeException {<a name="line.202"></a>
+<FONT color="green">203</FONT>                    response.put( "Upgrade", "websocket" );<a name="line.203"></a>
+<FONT color="green">204</FONT>                    response.put( "Connection", request.getFieldValue( "Connection" ) ); // to respond to a Connection keep alives<a name="line.204"></a>
+<FONT color="green">205</FONT>                    response.setHttpStatusMessage( "Switching Protocols" );<a name="line.205"></a>
+<FONT color="green">206</FONT>                    String seckey = request.getFieldValue( "Sec-WebSocket-Key" );<a name="line.206"></a>
+<FONT color="green">207</FONT>                    if( seckey == null )<a name="line.207"></a>
+<FONT color="green">208</FONT>                            throw new InvalidHandshakeException( "missing Sec-WebSocket-Key" );<a name="line.208"></a>
+<FONT color="green">209</FONT>                    response.put( "Sec-WebSocket-Accept", generateFinalKey( seckey ) );<a name="line.209"></a>
+<FONT color="green">210</FONT>                    return response;<a name="line.210"></a>
+<FONT color="green">211</FONT>            }<a name="line.211"></a>
+<FONT color="green">212</FONT>    <a name="line.212"></a>
+<FONT color="green">213</FONT>            private byte[] toByteArray( long val, int bytecount ) {<a name="line.213"></a>
+<FONT color="green">214</FONT>                    byte[] buffer = new byte[ bytecount ];<a name="line.214"></a>
+<FONT color="green">215</FONT>                    int highest = 8 * bytecount - 8;<a name="line.215"></a>
+<FONT color="green">216</FONT>                    for( int i = 0 ; i &lt; bytecount ; i++ ) {<a name="line.216"></a>
+<FONT color="green">217</FONT>                            buffer[ i ] = (byte) ( val &gt;&gt;&gt; ( highest - 8 * i ) );<a name="line.217"></a>
+<FONT color="green">218</FONT>                    }<a name="line.218"></a>
+<FONT color="green">219</FONT>                    return buffer;<a name="line.219"></a>
+<FONT color="green">220</FONT>            }<a name="line.220"></a>
+<FONT color="green">221</FONT>    <a name="line.221"></a>
+<FONT color="green">222</FONT>            private Opcode toOpcode( byte opcode ) throws InvalidFrameException {<a name="line.222"></a>
+<FONT color="green">223</FONT>                    switch ( opcode ) {<a name="line.223"></a>
+<FONT color="green">224</FONT>                            case 0:<a name="line.224"></a>
+<FONT color="green">225</FONT>                                    return Opcode.CONTINUOUS;<a name="line.225"></a>
+<FONT color="green">226</FONT>                            case 1:<a name="line.226"></a>
+<FONT color="green">227</FONT>                                    return Opcode.TEXT;<a name="line.227"></a>
+<FONT color="green">228</FONT>                            case 2:<a name="line.228"></a>
+<FONT color="green">229</FONT>                                    return Opcode.BINARY;<a name="line.229"></a>
+<FONT color="green">230</FONT>                                    // 3-7 are not yet defined<a name="line.230"></a>
+<FONT color="green">231</FONT>                            case 8:<a name="line.231"></a>
+<FONT color="green">232</FONT>                                    return Opcode.CLOSING;<a name="line.232"></a>
+<FONT color="green">233</FONT>                            case 9:<a name="line.233"></a>
+<FONT color="green">234</FONT>                                    return Opcode.PING;<a name="line.234"></a>
+<FONT color="green">235</FONT>                            case 10:<a name="line.235"></a>
+<FONT color="green">236</FONT>                                    return Opcode.PONG;<a name="line.236"></a>
+<FONT color="green">237</FONT>                                    // 11-15 are not yet defined<a name="line.237"></a>
+<FONT color="green">238</FONT>                            default :<a name="line.238"></a>
+<FONT color="green">239</FONT>                                    throw new InvalidFrameException( "unknow optcode " + (short) opcode );<a name="line.239"></a>
+<FONT color="green">240</FONT>                    }<a name="line.240"></a>
+<FONT color="green">241</FONT>            }<a name="line.241"></a>
+<FONT color="green">242</FONT>    <a name="line.242"></a>
+<FONT color="green">243</FONT>            @Override<a name="line.243"></a>
+<FONT color="green">244</FONT>            public List&lt;Framedata&gt; translateFrame( ByteBuffer buffer ) throws LimitExedeedException , InvalidDataException {<a name="line.244"></a>
+<FONT color="green">245</FONT>                    List&lt;Framedata&gt; frames = new LinkedList&lt;Framedata&gt;();<a name="line.245"></a>
+<FONT color="green">246</FONT>                    Framedata cur;<a name="line.246"></a>
+<FONT color="green">247</FONT>    <a name="line.247"></a>
+<FONT color="green">248</FONT>                    if( incompleteframe != null ) {<a name="line.248"></a>
+<FONT color="green">249</FONT>                            // complete an incomplete frame<a name="line.249"></a>
+<FONT color="green">250</FONT>                            while ( true ) {<a name="line.250"></a>
+<FONT color="green">251</FONT>                                    try {<a name="line.251"></a>
+<FONT color="green">252</FONT>                                            buffer.mark();<a name="line.252"></a>
+<FONT color="green">253</FONT>                                            int available_next_byte_count = buffer.remaining();// The number of bytes received<a name="line.253"></a>
+<FONT color="green">254</FONT>                                            int expected_next_byte_count = incompleteframe.remaining();// The number of bytes to complete the incomplete frame<a name="line.254"></a>
+<FONT color="green">255</FONT>    <a name="line.255"></a>
+<FONT color="green">256</FONT>                                            if( expected_next_byte_count &gt; available_next_byte_count ) {<a name="line.256"></a>
+<FONT color="green">257</FONT>                                                    // did not receive enough bytes to complete the frame<a name="line.257"></a>
+<FONT color="green">258</FONT>                                                    incompleteframe.put( buffer.array(), buffer.position(), available_next_byte_count );<a name="line.258"></a>
+<FONT color="green">259</FONT>                                                    buffer.position( buffer.position() + available_next_byte_count );<a name="line.259"></a>
+<FONT color="green">260</FONT>                                                    return Collections.emptyList();<a name="line.260"></a>
+<FONT color="green">261</FONT>                                            }<a name="line.261"></a>
+<FONT color="green">262</FONT>                                            incompleteframe.put( buffer.array(), buffer.position(), expected_next_byte_count );<a name="line.262"></a>
+<FONT color="green">263</FONT>                                            buffer.position( buffer.position() + expected_next_byte_count );<a name="line.263"></a>
+<FONT color="green">264</FONT>    <a name="line.264"></a>
+<FONT color="green">265</FONT>                                            cur = translateSingleFrame( (ByteBuffer) incompleteframe.duplicate().position( 0 ) );<a name="line.265"></a>
+<FONT color="green">266</FONT>                                            frames.add( cur );<a name="line.266"></a>
+<FONT color="green">267</FONT>                                            incompleteframe = null;<a name="line.267"></a>
+<FONT color="green">268</FONT>                                            break; // go on with the normal frame receival<a name="line.268"></a>
+<FONT color="green">269</FONT>                                    } catch ( IncompleteException e ) {<a name="line.269"></a>
+<FONT color="green">270</FONT>                                            // extending as much as suggested<a name="line.270"></a>
+<FONT color="green">271</FONT>                                            int oldsize = incompleteframe.limit();<a name="line.271"></a>
+<FONT color="green">272</FONT>                                            ByteBuffer extendedframe = ByteBuffer.allocate( checkAlloc( e.getPreferedSize() ) );<a name="line.272"></a>
+<FONT color="green">273</FONT>                                            assert ( extendedframe.limit() &gt; incompleteframe.limit() );<a name="line.273"></a>
+<FONT color="green">274</FONT>                                            incompleteframe.rewind();<a name="line.274"></a>
+<FONT color="green">275</FONT>                                            extendedframe.put( incompleteframe );<a name="line.275"></a>
+<FONT color="green">276</FONT>                                            incompleteframe = extendedframe;<a name="line.276"></a>
+<FONT color="green">277</FONT>                                            <a name="line.277"></a>
+<FONT color="green">278</FONT>                                            return translateFrame( buffer );<a name="line.278"></a>
+<FONT color="green">279</FONT>                                    }<a name="line.279"></a>
+<FONT color="green">280</FONT>                            }<a name="line.280"></a>
+<FONT color="green">281</FONT>                    }<a name="line.281"></a>
+<FONT color="green">282</FONT>    <a name="line.282"></a>
+<FONT color="green">283</FONT>                    while ( buffer.hasRemaining() ) {// Read as much as possible full frames<a name="line.283"></a>
+<FONT color="green">284</FONT>                            buffer.mark();<a name="line.284"></a>
+<FONT color="green">285</FONT>                            try {<a name="line.285"></a>
+<FONT color="green">286</FONT>                                    cur = translateSingleFrame( buffer );<a name="line.286"></a>
+<FONT color="green">287</FONT>                                    frames.add( cur );<a name="line.287"></a>
+<FONT color="green">288</FONT>                            } catch ( IncompleteException e ) {<a name="line.288"></a>
+<FONT color="green">289</FONT>                                    // remember the incomplete data<a name="line.289"></a>
+<FONT color="green">290</FONT>                                    buffer.reset();<a name="line.290"></a>
+<FONT color="green">291</FONT>                                    int pref = e.getPreferedSize();<a name="line.291"></a>
+<FONT color="green">292</FONT>                                    incompleteframe = ByteBuffer.allocate( checkAlloc( pref ) );<a name="line.292"></a>
+<FONT color="green">293</FONT>                                    incompleteframe.put( buffer );<a name="line.293"></a>
+<FONT color="green">294</FONT>                                    break;<a name="line.294"></a>
+<FONT color="green">295</FONT>                            }<a name="line.295"></a>
+<FONT color="green">296</FONT>                    }<a name="line.296"></a>
+<FONT color="green">297</FONT>                    return frames;<a name="line.297"></a>
+<FONT color="green">298</FONT>            }<a name="line.298"></a>
+<FONT color="green">299</FONT>    <a name="line.299"></a>
+<FONT color="green">300</FONT>            public Framedata translateSingleFrame( ByteBuffer buffer ) throws IncompleteException , InvalidDataException {<a name="line.300"></a>
+<FONT color="green">301</FONT>                    int maxpacketsize = buffer.remaining();<a name="line.301"></a>
+<FONT color="green">302</FONT>                    int realpacketsize = 2;<a name="line.302"></a>
+<FONT color="green">303</FONT>                    if( maxpacketsize &lt; realpacketsize )<a name="line.303"></a>
+<FONT color="green">304</FONT>                            throw new IncompleteException( realpacketsize );<a name="line.304"></a>
+<FONT color="green">305</FONT>                    byte b1 = buffer.get( /*0*/);<a name="line.305"></a>
+<FONT color="green">306</FONT>                    boolean FIN = b1 &gt;&gt; 8 != 0;<a name="line.306"></a>
+<FONT color="green">307</FONT>                    byte rsv = (byte) ( ( b1 &amp; ~(byte) 128 ) &gt;&gt; 4 );<a name="line.307"></a>
+<FONT color="green">308</FONT>                    if( rsv != 0 )<a name="line.308"></a>
+<FONT color="green">309</FONT>                            throw new InvalidFrameException( "bad rsv " + rsv );<a name="line.309"></a>
+<FONT color="green">310</FONT>                    byte b2 = buffer.get( /*1*/);<a name="line.310"></a>
+<FONT color="green">311</FONT>                    boolean MASK = ( b2 &amp; -128 ) != 0;<a name="line.311"></a>
+<FONT color="green">312</FONT>                    int payloadlength = (byte) ( b2 &amp; ~(byte) 128 );<a name="line.312"></a>
+<FONT color="green">313</FONT>                    Opcode optcode = toOpcode( (byte) ( b1 &amp; 15 ) );<a name="line.313"></a>
+<FONT color="green">314</FONT>    <a name="line.314"></a>
+<FONT color="green">315</FONT>                    if( !FIN ) {<a name="line.315"></a>
+<FONT color="green">316</FONT>                            if( optcode == Opcode.PING || optcode == Opcode.PONG || optcode == Opcode.CLOSING ) {<a name="line.316"></a>
+<FONT color="green">317</FONT>                                    throw new InvalidFrameException( "control frames may no be fragmented" );<a name="line.317"></a>
+<FONT color="green">318</FONT>                            }<a name="line.318"></a>
+<FONT color="green">319</FONT>                    }<a name="line.319"></a>
+<FONT color="green">320</FONT>    <a name="line.320"></a>
+<FONT color="green">321</FONT>                    if( payloadlength &gt;= 0 &amp;&amp; payloadlength &lt;= 125 ) {<a name="line.321"></a>
+<FONT color="green">322</FONT>                    } else {<a name="line.322"></a>
+<FONT color="green">323</FONT>                            if( optcode == Opcode.PING || optcode == Opcode.PONG || optcode == Opcode.CLOSING ) {<a name="line.323"></a>
+<FONT color="green">324</FONT>                                    throw new InvalidFrameException( "more than 125 octets" );<a name="line.324"></a>
+<FONT color="green">325</FONT>                            }<a name="line.325"></a>
+<FONT color="green">326</FONT>                            if( payloadlength == 126 ) {<a name="line.326"></a>
+<FONT color="green">327</FONT>                                    realpacketsize += 2; // additional length bytes<a name="line.327"></a>
+<FONT color="green">328</FONT>                                    if( maxpacketsize &lt; realpacketsize )<a name="line.328"></a>
+<FONT color="green">329</FONT>                                            throw new IncompleteException( realpacketsize );<a name="line.329"></a>
+<FONT color="green">330</FONT>                                    byte[] sizebytes = new byte[ 3 ];<a name="line.330"></a>
+<FONT color="green">331</FONT>                                    sizebytes[ 1 ] = buffer.get( /*1 + 1*/);<a name="line.331"></a>
+<FONT color="green">332</FONT>                                    sizebytes[ 2 ] = buffer.get( /*1 + 2*/);<a name="line.332"></a>
+<FONT color="green">333</FONT>                                    payloadlength = new BigInteger( sizebytes ).intValue();<a name="line.333"></a>
+<FONT color="green">334</FONT>                            } else {<a name="line.334"></a>
+<FONT color="green">335</FONT>                                    realpacketsize += 8; // additional length bytes<a name="line.335"></a>
+<FONT color="green">336</FONT>                                    if( maxpacketsize &lt; realpacketsize )<a name="line.336"></a>
+<FONT color="green">337</FONT>                                            throw new IncompleteException( realpacketsize );<a name="line.337"></a>
+<FONT color="green">338</FONT>                                    byte[] bytes = new byte[ 8 ];<a name="line.338"></a>
+<FONT color="green">339</FONT>                                    for( int i = 0 ; i &lt; 8 ; i++ ) {<a name="line.339"></a>
+<FONT color="green">340</FONT>                                            bytes[ i ] = buffer.get( /*1 + i*/);<a name="line.340"></a>
+<FONT color="green">341</FONT>                                    }<a name="line.341"></a>
+<FONT color="green">342</FONT>                                    long length = new BigInteger( bytes ).longValue();<a name="line.342"></a>
+<FONT color="green">343</FONT>                                    if( length &gt; Integer.MAX_VALUE ) {<a name="line.343"></a>
+<FONT color="green">344</FONT>                                            throw new LimitExedeedException( "Payloadsize is to big..." );<a name="line.344"></a>
+<FONT color="green">345</FONT>                                    } else {<a name="line.345"></a>
+<FONT color="green">346</FONT>                                            payloadlength = (int) length;<a name="line.346"></a>
+<FONT color="green">347</FONT>                                    }<a name="line.347"></a>
+<FONT color="green">348</FONT>                            }<a name="line.348"></a>
+<FONT color="green">349</FONT>                    }<a name="line.349"></a>
+<FONT color="green">350</FONT>    <a name="line.350"></a>
+<FONT color="green">351</FONT>                    // int maskskeystart = foff + realpacketsize;<a name="line.351"></a>
+<FONT color="green">352</FONT>                    realpacketsize += ( MASK ? 4 : 0 );<a name="line.352"></a>
+<FONT color="green">353</FONT>                    // int payloadstart = foff + realpacketsize;<a name="line.353"></a>
+<FONT color="green">354</FONT>                    realpacketsize += payloadlength;<a name="line.354"></a>
+<FONT color="green">355</FONT>    <a name="line.355"></a>
+<FONT color="green">356</FONT>                    if( maxpacketsize &lt; realpacketsize )<a name="line.356"></a>
+<FONT color="green">357</FONT>                            throw new IncompleteException( realpacketsize );<a name="line.357"></a>
+<FONT color="green">358</FONT>    <a name="line.358"></a>
+<FONT color="green">359</FONT>                    ByteBuffer payload = ByteBuffer.allocate( checkAlloc( payloadlength ) );<a name="line.359"></a>
+<FONT color="green">360</FONT>                    if( MASK ) {<a name="line.360"></a>
+<FONT color="green">361</FONT>                            byte[] maskskey = new byte[ 4 ];<a name="line.361"></a>
+<FONT color="green">362</FONT>                            buffer.get( maskskey );<a name="line.362"></a>
+<FONT color="green">363</FONT>                            for( int i = 0 ; i &lt; payloadlength ; i++ ) {<a name="line.363"></a>
+<FONT color="green">364</FONT>                                    payload.put( (byte) ( (byte) buffer.get( /*payloadstart + i*/) ^ (byte) maskskey[ i % 4 ] ) );<a name="line.364"></a>
+<FONT color="green">365</FONT>                            }<a name="line.365"></a>
+<FONT color="green">366</FONT>                    } else {<a name="line.366"></a>
+<FONT color="green">367</FONT>                            payload.put( buffer.array(), buffer.position(), payload.limit() );<a name="line.367"></a>
+<FONT color="green">368</FONT>                            buffer.position( buffer.position() + payload.limit() );<a name="line.368"></a>
+<FONT color="green">369</FONT>                    }<a name="line.369"></a>
+<FONT color="green">370</FONT>    <a name="line.370"></a>
+<FONT color="green">371</FONT>                    FrameBuilder frame;<a name="line.371"></a>
+<FONT color="green">372</FONT>                    if( optcode == Opcode.CLOSING ) {<a name="line.372"></a>
+<FONT color="green">373</FONT>                            frame = new CloseFrameBuilder();<a name="line.373"></a>
+<FONT color="green">374</FONT>                    } else {<a name="line.374"></a>
+<FONT color="green">375</FONT>                            frame = new FramedataImpl1();<a name="line.375"></a>
+<FONT color="green">376</FONT>                            frame.setFin( FIN );<a name="line.376"></a>
+<FONT color="green">377</FONT>                            frame.setOptcode( optcode );<a name="line.377"></a>
+<FONT color="green">378</FONT>                    }<a name="line.378"></a>
+<FONT color="green">379</FONT>                    payload.flip();<a name="line.379"></a>
+<FONT color="green">380</FONT>                    frame.setPayload( payload );<a name="line.380"></a>
+<FONT color="green">381</FONT>                    return frame;<a name="line.381"></a>
+<FONT color="green">382</FONT>            }<a name="line.382"></a>
+<FONT color="green">383</FONT>    <a name="line.383"></a>
+<FONT color="green">384</FONT>            @Override<a name="line.384"></a>
+<FONT color="green">385</FONT>            public void reset() {<a name="line.385"></a>
+<FONT color="green">386</FONT>                    incompleteframe = null;<a name="line.386"></a>
+<FONT color="green">387</FONT>            }<a name="line.387"></a>
+<FONT color="green">388</FONT>    <a name="line.388"></a>
+<FONT color="green">389</FONT>            @Override<a name="line.389"></a>
+<FONT color="green">390</FONT>            public Draft copyInstance() {<a name="line.390"></a>
+<FONT color="green">391</FONT>                    return new Draft_10();<a name="line.391"></a>
+<FONT color="green">392</FONT>            }<a name="line.392"></a>
+<FONT color="green">393</FONT>    <a name="line.393"></a>
+<FONT color="green">394</FONT>            @Override<a name="line.394"></a>
+<FONT color="green">395</FONT>            public CloseHandshakeType getCloseHandshakeType() {<a name="line.395"></a>
+<FONT color="green">396</FONT>                    return CloseHandshakeType.TWOWAY;<a name="line.396"></a>
+<FONT color="green">397</FONT>            }<a name="line.397"></a>
+<FONT color="green">398</FONT>    }<a name="line.398"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>

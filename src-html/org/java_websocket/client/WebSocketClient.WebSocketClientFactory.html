@@ -1,0 +1,526 @@
+<HTML>
+<BODY BGCOLOR="white">
+<PRE>
+<FONT color="green">001</FONT>    package org.java_websocket.client;<a name="line.1"></a>
+<FONT color="green">002</FONT>    <a name="line.2"></a>
+<FONT color="green">003</FONT>    import java.io.IOException;<a name="line.3"></a>
+<FONT color="green">004</FONT>    import java.net.InetSocketAddress;<a name="line.4"></a>
+<FONT color="green">005</FONT>    import java.net.URI;<a name="line.5"></a>
+<FONT color="green">006</FONT>    import java.nio.ByteBuffer;<a name="line.6"></a>
+<FONT color="green">007</FONT>    import java.nio.channels.ByteChannel;<a name="line.7"></a>
+<FONT color="green">008</FONT>    import java.nio.channels.CancelledKeyException;<a name="line.8"></a>
+<FONT color="green">009</FONT>    import java.nio.channels.ClosedByInterruptException;<a name="line.9"></a>
+<FONT color="green">010</FONT>    import java.nio.channels.NotYetConnectedException;<a name="line.10"></a>
+<FONT color="green">011</FONT>    import java.nio.channels.SelectionKey;<a name="line.11"></a>
+<FONT color="green">012</FONT>    import java.nio.channels.SocketChannel;<a name="line.12"></a>
+<FONT color="green">013</FONT>    import java.nio.channels.spi.SelectorProvider;<a name="line.13"></a>
+<FONT color="green">014</FONT>    import java.util.Map;<a name="line.14"></a>
+<FONT color="green">015</FONT>    import java.util.concurrent.CountDownLatch;<a name="line.15"></a>
+<FONT color="green">016</FONT>    <a name="line.16"></a>
+<FONT color="green">017</FONT>    import org.java_websocket.SocketChannelIOHelper;<a name="line.17"></a>
+<FONT color="green">018</FONT>    import org.java_websocket.WebSocket;<a name="line.18"></a>
+<FONT color="green">019</FONT>    import org.java_websocket.WebSocket.READYSTATE;<a name="line.19"></a>
+<FONT color="green">020</FONT>    import org.java_websocket.WebSocketAdapter;<a name="line.20"></a>
+<FONT color="green">021</FONT>    import org.java_websocket.WebSocketFactory;<a name="line.21"></a>
+<FONT color="green">022</FONT>    import org.java_websocket.WebSocketImpl;<a name="line.22"></a>
+<FONT color="green">023</FONT>    import org.java_websocket.WrappedByteChannel;<a name="line.23"></a>
+<FONT color="green">024</FONT>    import org.java_websocket.drafts.Draft;<a name="line.24"></a>
+<FONT color="green">025</FONT>    import org.java_websocket.drafts.Draft_10;<a name="line.25"></a>
+<FONT color="green">026</FONT>    import org.java_websocket.exceptions.InvalidHandshakeException;<a name="line.26"></a>
+<FONT color="green">027</FONT>    import org.java_websocket.framing.CloseFrame;<a name="line.27"></a>
+<FONT color="green">028</FONT>    import org.java_websocket.handshake.HandshakeImpl1Client;<a name="line.28"></a>
+<FONT color="green">029</FONT>    import org.java_websocket.handshake.Handshakedata;<a name="line.29"></a>
+<FONT color="green">030</FONT>    import org.java_websocket.handshake.ServerHandshake;<a name="line.30"></a>
+<FONT color="green">031</FONT>    <a name="line.31"></a>
+<FONT color="green">032</FONT>    /**<a name="line.32"></a>
+<FONT color="green">033</FONT>     * The &lt;tt&gt;WebSocketClient&lt;/tt&gt; is an abstract class that expects a valid<a name="line.33"></a>
+<FONT color="green">034</FONT>     * "ws://" URI to connect to. When connected, an instance recieves important<a name="line.34"></a>
+<FONT color="green">035</FONT>     * events related to the life of the connection. A subclass must implement<a name="line.35"></a>
+<FONT color="green">036</FONT>     * &lt;var&gt;onOpen&lt;/var&gt;, &lt;var&gt;onClose&lt;/var&gt;, and &lt;var&gt;onMessage&lt;/var&gt; to be<a name="line.36"></a>
+<FONT color="green">037</FONT>     * useful. An instance can send messages to it's connected server via the<a name="line.37"></a>
+<FONT color="green">038</FONT>     * &lt;var&gt;send&lt;/var&gt; method.<a name="line.38"></a>
+<FONT color="green">039</FONT>     * <a name="line.39"></a>
+<FONT color="green">040</FONT>     * @author Nathan Rajlich<a name="line.40"></a>
+<FONT color="green">041</FONT>     */<a name="line.41"></a>
+<FONT color="green">042</FONT>    public abstract class WebSocketClient extends WebSocketAdapter implements Runnable {<a name="line.42"></a>
+<FONT color="green">043</FONT>    <a name="line.43"></a>
+<FONT color="green">044</FONT>            /**<a name="line.44"></a>
+<FONT color="green">045</FONT>             * The URI this channel is supposed to connect to.<a name="line.45"></a>
+<FONT color="green">046</FONT>             */<a name="line.46"></a>
+<FONT color="green">047</FONT>            protected URI uri = null;<a name="line.47"></a>
+<FONT color="green">048</FONT>    <a name="line.48"></a>
+<FONT color="green">049</FONT>            private WebSocketImpl conn = null;<a name="line.49"></a>
+<FONT color="green">050</FONT>            /**<a name="line.50"></a>
+<FONT color="green">051</FONT>             * The SocketChannel instance this channel uses.<a name="line.51"></a>
+<FONT color="green">052</FONT>             */<a name="line.52"></a>
+<FONT color="green">053</FONT>            private SocketChannel channel = null;<a name="line.53"></a>
+<FONT color="green">054</FONT>    <a name="line.54"></a>
+<FONT color="green">055</FONT>            private ByteChannel wrappedchannel = null;<a name="line.55"></a>
+<FONT color="green">056</FONT>    <a name="line.56"></a>
+<FONT color="green">057</FONT>            private Thread writethread;<a name="line.57"></a>
+<FONT color="green">058</FONT>    <a name="line.58"></a>
+<FONT color="green">059</FONT>            private Thread readthread;<a name="line.59"></a>
+<FONT color="green">060</FONT>    <a name="line.60"></a>
+<FONT color="green">061</FONT>            private Draft draft;<a name="line.61"></a>
+<FONT color="green">062</FONT>    <a name="line.62"></a>
+<FONT color="green">063</FONT>            private Map&lt;String,String&gt; headers;<a name="line.63"></a>
+<FONT color="green">064</FONT>    <a name="line.64"></a>
+<FONT color="green">065</FONT>            private CountDownLatch connectLatch = new CountDownLatch( 1 );<a name="line.65"></a>
+<FONT color="green">066</FONT>    <a name="line.66"></a>
+<FONT color="green">067</FONT>            private CountDownLatch closeLatch = new CountDownLatch( 1 );<a name="line.67"></a>
+<FONT color="green">068</FONT>    <a name="line.68"></a>
+<FONT color="green">069</FONT>            private int timeout = 0;<a name="line.69"></a>
+<FONT color="green">070</FONT>    <a name="line.70"></a>
+<FONT color="green">071</FONT>            private WebSocketClientFactory wsfactory = new DefaultWebSocketClientFactory( this );<a name="line.71"></a>
+<FONT color="green">072</FONT>    <a name="line.72"></a>
+<FONT color="green">073</FONT>            private InetSocketAddress proxyAddress = null;<a name="line.73"></a>
+<FONT color="green">074</FONT>    <a name="line.74"></a>
+<FONT color="green">075</FONT>            public WebSocketClient( URI serverURI ) {<a name="line.75"></a>
+<FONT color="green">076</FONT>                    this( serverURI, new Draft_10() );<a name="line.76"></a>
+<FONT color="green">077</FONT>            }<a name="line.77"></a>
+<FONT color="green">078</FONT>    <a name="line.78"></a>
+<FONT color="green">079</FONT>            /**<a name="line.79"></a>
+<FONT color="green">080</FONT>             * Constructs a WebSocketClient instance and sets it to the connect to the<a name="line.80"></a>
+<FONT color="green">081</FONT>             * specified URI. The channel does not attampt to connect automatically. You<a name="line.81"></a>
+<FONT color="green">082</FONT>             * must call &lt;var&gt;connect&lt;/var&gt; first to initiate the socket connection.<a name="line.82"></a>
+<FONT color="green">083</FONT>             */<a name="line.83"></a>
+<FONT color="green">084</FONT>            public WebSocketClient( URI serverUri , Draft draft ) {<a name="line.84"></a>
+<FONT color="green">085</FONT>                    this( serverUri, draft, null, 0 );<a name="line.85"></a>
+<FONT color="green">086</FONT>            }<a name="line.86"></a>
+<FONT color="green">087</FONT>    <a name="line.87"></a>
+<FONT color="green">088</FONT>            public WebSocketClient( URI serverUri , Draft draft , Map&lt;String,String&gt; headers , int connecttimeout ) {<a name="line.88"></a>
+<FONT color="green">089</FONT>                    if( serverUri == null ) {<a name="line.89"></a>
+<FONT color="green">090</FONT>                            throw new IllegalArgumentException();<a name="line.90"></a>
+<FONT color="green">091</FONT>                    }<a name="line.91"></a>
+<FONT color="green">092</FONT>                    if( draft == null ) {<a name="line.92"></a>
+<FONT color="green">093</FONT>                            throw new IllegalArgumentException( "null as draft is permitted for `WebSocketServer` only!" );<a name="line.93"></a>
+<FONT color="green">094</FONT>                    }<a name="line.94"></a>
+<FONT color="green">095</FONT>                    this.uri = serverUri;<a name="line.95"></a>
+<FONT color="green">096</FONT>                    this.draft = draft;<a name="line.96"></a>
+<FONT color="green">097</FONT>                    this.headers = headers;<a name="line.97"></a>
+<FONT color="green">098</FONT>                    this.timeout = connecttimeout;<a name="line.98"></a>
+<FONT color="green">099</FONT>    <a name="line.99"></a>
+<FONT color="green">100</FONT>                    try {<a name="line.100"></a>
+<FONT color="green">101</FONT>                            channel = SelectorProvider.provider().openSocketChannel();<a name="line.101"></a>
+<FONT color="green">102</FONT>                            channel.configureBlocking( true );<a name="line.102"></a>
+<FONT color="green">103</FONT>                    } catch ( IOException e ) {<a name="line.103"></a>
+<FONT color="green">104</FONT>                            channel = null;<a name="line.104"></a>
+<FONT color="green">105</FONT>                            onWebsocketError( null, e );<a name="line.105"></a>
+<FONT color="green">106</FONT>                    }<a name="line.106"></a>
+<FONT color="green">107</FONT>                    if(channel == null){<a name="line.107"></a>
+<FONT color="green">108</FONT>                            conn = (WebSocketImpl) wsfactory.createWebSocket( this, draft, null );<a name="line.108"></a>
+<FONT color="green">109</FONT>                            conn.close( CloseFrame.NEVER_CONNECTED, "Failed to create or configure SocketChannel." );<a name="line.109"></a>
+<FONT color="green">110</FONT>                    }<a name="line.110"></a>
+<FONT color="green">111</FONT>                    else{<a name="line.111"></a>
+<FONT color="green">112</FONT>                            conn = (WebSocketImpl) wsfactory.createWebSocket( this, draft, channel.socket() );<a name="line.112"></a>
+<FONT color="green">113</FONT>                    }<a name="line.113"></a>
+<FONT color="green">114</FONT>                    <a name="line.114"></a>
+<FONT color="green">115</FONT>            }<a name="line.115"></a>
+<FONT color="green">116</FONT>    <a name="line.116"></a>
+<FONT color="green">117</FONT>            /**<a name="line.117"></a>
+<FONT color="green">118</FONT>             * Gets the URI that this WebSocketClient is connected to.<a name="line.118"></a>
+<FONT color="green">119</FONT>             * <a name="line.119"></a>
+<FONT color="green">120</FONT>             * @return The &lt;tt&gt;URI&lt;/tt&gt; for this WebSocketClient.<a name="line.120"></a>
+<FONT color="green">121</FONT>             */<a name="line.121"></a>
+<FONT color="green">122</FONT>            public URI getURI() {<a name="line.122"></a>
+<FONT color="green">123</FONT>                    return uri;<a name="line.123"></a>
+<FONT color="green">124</FONT>            }<a name="line.124"></a>
+<FONT color="green">125</FONT>    <a name="line.125"></a>
+<FONT color="green">126</FONT>            /** Returns the protocol version this channel uses. */<a name="line.126"></a>
+<FONT color="green">127</FONT>            public Draft getDraft() {<a name="line.127"></a>
+<FONT color="green">128</FONT>                    return draft;<a name="line.128"></a>
+<FONT color="green">129</FONT>            }<a name="line.129"></a>
+<FONT color="green">130</FONT>    <a name="line.130"></a>
+<FONT color="green">131</FONT>            /**<a name="line.131"></a>
+<FONT color="green">132</FONT>             * Starts a background thread that attempts and maintains a WebSocket<a name="line.132"></a>
+<FONT color="green">133</FONT>             * connection to the URI specified in the constructor or via &lt;var&gt;setURI&lt;/var&gt;.<a name="line.133"></a>
+<FONT color="green">134</FONT>             * &lt;var&gt;setURI&lt;/var&gt;.<a name="line.134"></a>
+<FONT color="green">135</FONT>             */<a name="line.135"></a>
+<FONT color="green">136</FONT>            public void connect() {<a name="line.136"></a>
+<FONT color="green">137</FONT>                    if( writethread != null )<a name="line.137"></a>
+<FONT color="green">138</FONT>                            throw new IllegalStateException( "WebSocketClient objects are not reuseable" );<a name="line.138"></a>
+<FONT color="green">139</FONT>                    writethread = new Thread( this );<a name="line.139"></a>
+<FONT color="green">140</FONT>                    writethread.start();<a name="line.140"></a>
+<FONT color="green">141</FONT>            }<a name="line.141"></a>
+<FONT color="green">142</FONT>    <a name="line.142"></a>
+<FONT color="green">143</FONT>            /**<a name="line.143"></a>
+<FONT color="green">144</FONT>             * Same as connect but blocks until the websocket connected or failed to do so.&lt;br&gt;<a name="line.144"></a>
+<FONT color="green">145</FONT>             * Returns whether it succeeded or not.<a name="line.145"></a>
+<FONT color="green">146</FONT>             **/<a name="line.146"></a>
+<FONT color="green">147</FONT>            public boolean connectBlocking() throws InterruptedException {<a name="line.147"></a>
+<FONT color="green">148</FONT>                    connect();<a name="line.148"></a>
+<FONT color="green">149</FONT>                    connectLatch.await();<a name="line.149"></a>
+<FONT color="green">150</FONT>                    return conn.isOpen();<a name="line.150"></a>
+<FONT color="green">151</FONT>            }<a name="line.151"></a>
+<FONT color="green">152</FONT>    <a name="line.152"></a>
+<FONT color="green">153</FONT>            public void close() {<a name="line.153"></a>
+<FONT color="green">154</FONT>                    if( writethread != null ) {<a name="line.154"></a>
+<FONT color="green">155</FONT>                            conn.close( CloseFrame.NORMAL );<a name="line.155"></a>
+<FONT color="green">156</FONT>                    }<a name="line.156"></a>
+<FONT color="green">157</FONT>            }<a name="line.157"></a>
+<FONT color="green">158</FONT>    <a name="line.158"></a>
+<FONT color="green">159</FONT>            public void closeBlocking() throws InterruptedException {<a name="line.159"></a>
+<FONT color="green">160</FONT>                    close();<a name="line.160"></a>
+<FONT color="green">161</FONT>                    closeLatch.await();<a name="line.161"></a>
+<FONT color="green">162</FONT>            }<a name="line.162"></a>
+<FONT color="green">163</FONT>    <a name="line.163"></a>
+<FONT color="green">164</FONT>            /**<a name="line.164"></a>
+<FONT color="green">165</FONT>             * Sends &lt;var&gt;text&lt;/var&gt; to the connected WebSocket server.<a name="line.165"></a>
+<FONT color="green">166</FONT>             * <a name="line.166"></a>
+<FONT color="green">167</FONT>             * @param text<a name="line.167"></a>
+<FONT color="green">168</FONT>             *            The String to send to the WebSocket server.<a name="line.168"></a>
+<FONT color="green">169</FONT>             */<a name="line.169"></a>
+<FONT color="green">170</FONT>            public void send( String text ) throws NotYetConnectedException {<a name="line.170"></a>
+<FONT color="green">171</FONT>                    conn.send( text );<a name="line.171"></a>
+<FONT color="green">172</FONT>            }<a name="line.172"></a>
+<FONT color="green">173</FONT>    <a name="line.173"></a>
+<FONT color="green">174</FONT>            /**<a name="line.174"></a>
+<FONT color="green">175</FONT>             * Sends &lt;var&gt;data&lt;/var&gt; to the connected WebSocket server.<a name="line.175"></a>
+<FONT color="green">176</FONT>             * <a name="line.176"></a>
+<FONT color="green">177</FONT>             * @param data<a name="line.177"></a>
+<FONT color="green">178</FONT>             *            The Byte-Array of data to send to the WebSocket server.<a name="line.178"></a>
+<FONT color="green">179</FONT>             */<a name="line.179"></a>
+<FONT color="green">180</FONT>            public void send( byte[] data ) throws NotYetConnectedException {<a name="line.180"></a>
+<FONT color="green">181</FONT>                            conn.send( data );<a name="line.181"></a>
+<FONT color="green">182</FONT>            }<a name="line.182"></a>
+<FONT color="green">183</FONT>    <a name="line.183"></a>
+<FONT color="green">184</FONT>            // Runnable IMPLEMENTATION /////////////////////////////////////////////////<a name="line.184"></a>
+<FONT color="green">185</FONT>            public void run() {<a name="line.185"></a>
+<FONT color="green">186</FONT>                    if( writethread == null )<a name="line.186"></a>
+<FONT color="green">187</FONT>                            writethread = Thread.currentThread();<a name="line.187"></a>
+<FONT color="green">188</FONT>                    interruptableRun();<a name="line.188"></a>
+<FONT color="green">189</FONT>    <a name="line.189"></a>
+<FONT color="green">190</FONT>                    assert ( !channel.isOpen() );<a name="line.190"></a>
+<FONT color="green">191</FONT>    <a name="line.191"></a>
+<FONT color="green">192</FONT>            }<a name="line.192"></a>
+<FONT color="green">193</FONT>    <a name="line.193"></a>
+<FONT color="green">194</FONT>            private final void interruptableRun() {<a name="line.194"></a>
+<FONT color="green">195</FONT>                    if( channel == null ) {<a name="line.195"></a>
+<FONT color="green">196</FONT>                            return;// channel will be initialized in the constructor and only be null if no socket channel could be created or if blocking mode could be established<a name="line.196"></a>
+<FONT color="green">197</FONT>                    }<a name="line.197"></a>
+<FONT color="green">198</FONT>    <a name="line.198"></a>
+<FONT color="green">199</FONT>                    try {<a name="line.199"></a>
+<FONT color="green">200</FONT>                            String host;<a name="line.200"></a>
+<FONT color="green">201</FONT>                            int port ;<a name="line.201"></a>
+<FONT color="green">202</FONT>    <a name="line.202"></a>
+<FONT color="green">203</FONT>                            if( proxyAddress != null ) {<a name="line.203"></a>
+<FONT color="green">204</FONT>                                    host = proxyAddress.getHostName();<a name="line.204"></a>
+<FONT color="green">205</FONT>                                    port = proxyAddress.getPort();<a name="line.205"></a>
+<FONT color="green">206</FONT>                            } else {<a name="line.206"></a>
+<FONT color="green">207</FONT>                                    host = uri.getHost();<a name="line.207"></a>
+<FONT color="green">208</FONT>                                    port = getPort();<a name="line.208"></a>
+<FONT color="green">209</FONT>                            }<a name="line.209"></a>
+<FONT color="green">210</FONT>                            channel.connect( new InetSocketAddress( host, port ) );<a name="line.210"></a>
+<FONT color="green">211</FONT>                            conn.channel = wrappedchannel = createProxyChannel( wsfactory.wrapChannel( channel, null, host, port ) );<a name="line.211"></a>
+<FONT color="green">212</FONT>    <a name="line.212"></a>
+<FONT color="green">213</FONT>                            timeout = 0; // since connect is over<a name="line.213"></a>
+<FONT color="green">214</FONT>                            sendHandshake();<a name="line.214"></a>
+<FONT color="green">215</FONT>                            readthread = new Thread( new WebsocketWriteThread() );<a name="line.215"></a>
+<FONT color="green">216</FONT>                            readthread.start();<a name="line.216"></a>
+<FONT color="green">217</FONT>                    } catch ( ClosedByInterruptException e ) {<a name="line.217"></a>
+<FONT color="green">218</FONT>                            onWebsocketError( null, e );<a name="line.218"></a>
+<FONT color="green">219</FONT>                            return;<a name="line.219"></a>
+<FONT color="green">220</FONT>                    } catch ( /*IOException | SecurityException | UnresolvedAddressException*/Exception e ) {//<a name="line.220"></a>
+<FONT color="green">221</FONT>                            onWebsocketError( conn, e );<a name="line.221"></a>
+<FONT color="green">222</FONT>                            conn.closeConnection( CloseFrame.NEVER_CONNECTED, e.getMessage() );<a name="line.222"></a>
+<FONT color="green">223</FONT>                            return;<a name="line.223"></a>
+<FONT color="green">224</FONT>                    }<a name="line.224"></a>
+<FONT color="green">225</FONT>    <a name="line.225"></a>
+<FONT color="green">226</FONT>                    ByteBuffer buff = ByteBuffer.allocate( WebSocketImpl.RCVBUF );<a name="line.226"></a>
+<FONT color="green">227</FONT>                    try/*IO*/{<a name="line.227"></a>
+<FONT color="green">228</FONT>                            while ( channel.isOpen() ) {<a name="line.228"></a>
+<FONT color="green">229</FONT>                                    if( SocketChannelIOHelper.read( buff, this.conn, wrappedchannel ) ) {<a name="line.229"></a>
+<FONT color="green">230</FONT>                                            conn.decode( buff );<a name="line.230"></a>
+<FONT color="green">231</FONT>                                    } else {<a name="line.231"></a>
+<FONT color="green">232</FONT>                                            conn.eot();<a name="line.232"></a>
+<FONT color="green">233</FONT>                                    }<a name="line.233"></a>
+<FONT color="green">234</FONT>    <a name="line.234"></a>
+<FONT color="green">235</FONT>                                    if( wrappedchannel instanceof WrappedByteChannel ) {<a name="line.235"></a>
+<FONT color="green">236</FONT>                                            WrappedByteChannel w = (WrappedByteChannel) wrappedchannel;<a name="line.236"></a>
+<FONT color="green">237</FONT>                                            if( w.isNeedRead() ) {<a name="line.237"></a>
+<FONT color="green">238</FONT>                                                    while ( SocketChannelIOHelper.readMore( buff, conn, w ) ) {<a name="line.238"></a>
+<FONT color="green">239</FONT>                                                            conn.decode( buff );<a name="line.239"></a>
+<FONT color="green">240</FONT>                                                    }<a name="line.240"></a>
+<FONT color="green">241</FONT>                                                    conn.decode( buff );<a name="line.241"></a>
+<FONT color="green">242</FONT>                                            }<a name="line.242"></a>
+<FONT color="green">243</FONT>                                    }<a name="line.243"></a>
+<FONT color="green">244</FONT>                            }<a name="line.244"></a>
+<FONT color="green">245</FONT>    <a name="line.245"></a>
+<FONT color="green">246</FONT>                    } catch ( CancelledKeyException e ) {<a name="line.246"></a>
+<FONT color="green">247</FONT>                            conn.eot();<a name="line.247"></a>
+<FONT color="green">248</FONT>                    } catch ( IOException e ) {<a name="line.248"></a>
+<FONT color="green">249</FONT>                            conn.eot();<a name="line.249"></a>
+<FONT color="green">250</FONT>                    } catch ( RuntimeException e ) {<a name="line.250"></a>
+<FONT color="green">251</FONT>                            // this catch case covers internal errors only and indicates a bug in this websocket implementation<a name="line.251"></a>
+<FONT color="green">252</FONT>                            onError( e );<a name="line.252"></a>
+<FONT color="green">253</FONT>                            conn.closeConnection( CloseFrame.ABNORMAL_CLOSE, e.getMessage() );<a name="line.253"></a>
+<FONT color="green">254</FONT>                    }<a name="line.254"></a>
+<FONT color="green">255</FONT>            }<a name="line.255"></a>
+<FONT color="green">256</FONT>    <a name="line.256"></a>
+<FONT color="green">257</FONT>            private int getPort() {<a name="line.257"></a>
+<FONT color="green">258</FONT>                    int port = uri.getPort();<a name="line.258"></a>
+<FONT color="green">259</FONT>                    if( port == -1 ) {<a name="line.259"></a>
+<FONT color="green">260</FONT>                            String scheme = uri.getScheme();<a name="line.260"></a>
+<FONT color="green">261</FONT>                            if( scheme.equals( "wss" ) ) {<a name="line.261"></a>
+<FONT color="green">262</FONT>                                    return WebSocket.DEFAULT_WSS_PORT;<a name="line.262"></a>
+<FONT color="green">263</FONT>                            } else if( scheme.equals( "ws" ) ) {<a name="line.263"></a>
+<FONT color="green">264</FONT>                                    return WebSocket.DEFAULT_PORT;<a name="line.264"></a>
+<FONT color="green">265</FONT>                            } else {<a name="line.265"></a>
+<FONT color="green">266</FONT>                                    throw new RuntimeException( "unkonow scheme" + scheme );<a name="line.266"></a>
+<FONT color="green">267</FONT>                            }<a name="line.267"></a>
+<FONT color="green">268</FONT>                    }<a name="line.268"></a>
+<FONT color="green">269</FONT>                    return port;<a name="line.269"></a>
+<FONT color="green">270</FONT>            }<a name="line.270"></a>
+<FONT color="green">271</FONT>    <a name="line.271"></a>
+<FONT color="green">272</FONT>            private void sendHandshake() throws InvalidHandshakeException {<a name="line.272"></a>
+<FONT color="green">273</FONT>                    String path;<a name="line.273"></a>
+<FONT color="green">274</FONT>                    String part1 = uri.getPath();<a name="line.274"></a>
+<FONT color="green">275</FONT>                    String part2 = uri.getQuery();<a name="line.275"></a>
+<FONT color="green">276</FONT>                    if( part1 == null || part1.length() == 0 )<a name="line.276"></a>
+<FONT color="green">277</FONT>                            path = "/";<a name="line.277"></a>
+<FONT color="green">278</FONT>                    else<a name="line.278"></a>
+<FONT color="green">279</FONT>                            path = part1;<a name="line.279"></a>
+<FONT color="green">280</FONT>                    if( part2 != null )<a name="line.280"></a>
+<FONT color="green">281</FONT>                            path += "?" + part2;<a name="line.281"></a>
+<FONT color="green">282</FONT>                    int port = getPort();<a name="line.282"></a>
+<FONT color="green">283</FONT>                    String host = uri.getHost() + ( port != WebSocket.DEFAULT_PORT ? ":" + port : "" );<a name="line.283"></a>
+<FONT color="green">284</FONT>    <a name="line.284"></a>
+<FONT color="green">285</FONT>                    HandshakeImpl1Client handshake = new HandshakeImpl1Client();<a name="line.285"></a>
+<FONT color="green">286</FONT>                    handshake.setResourceDescriptor( path );<a name="line.286"></a>
+<FONT color="green">287</FONT>                    handshake.put( "Host", host );<a name="line.287"></a>
+<FONT color="green">288</FONT>                    if( headers != null ) {<a name="line.288"></a>
+<FONT color="green">289</FONT>                            for( Map.Entry&lt;String,String&gt; kv : headers.entrySet() ) {<a name="line.289"></a>
+<FONT color="green">290</FONT>                                    handshake.put( kv.getKey(), kv.getValue() );<a name="line.290"></a>
+<FONT color="green">291</FONT>                            }<a name="line.291"></a>
+<FONT color="green">292</FONT>                    }<a name="line.292"></a>
+<FONT color="green">293</FONT>                    conn.startHandshake( handshake );<a name="line.293"></a>
+<FONT color="green">294</FONT>            }<a name="line.294"></a>
+<FONT color="green">295</FONT>    <a name="line.295"></a>
+<FONT color="green">296</FONT>            /**<a name="line.296"></a>
+<FONT color="green">297</FONT>             * This represents the state of the connection.<a name="line.297"></a>
+<FONT color="green">298</FONT>             * You can use this method instead of<a name="line.298"></a>
+<FONT color="green">299</FONT>             */<a name="line.299"></a>
+<FONT color="green">300</FONT>            public READYSTATE getReadyState() {<a name="line.300"></a>
+<FONT color="green">301</FONT>                    return conn.getReadyState();<a name="line.301"></a>
+<FONT color="green">302</FONT>            }<a name="line.302"></a>
+<FONT color="green">303</FONT>    <a name="line.303"></a>
+<FONT color="green">304</FONT>            /**<a name="line.304"></a>
+<FONT color="green">305</FONT>             * Calls subclass' implementation of &lt;var&gt;onMessage&lt;/var&gt;.<a name="line.305"></a>
+<FONT color="green">306</FONT>             * <a name="line.306"></a>
+<FONT color="green">307</FONT>             * @param conn<a name="line.307"></a>
+<FONT color="green">308</FONT>             * @param message<a name="line.308"></a>
+<FONT color="green">309</FONT>             */<a name="line.309"></a>
+<FONT color="green">310</FONT>            @Override<a name="line.310"></a>
+<FONT color="green">311</FONT>            public final void onWebsocketMessage( WebSocket conn, String message ) {<a name="line.311"></a>
+<FONT color="green">312</FONT>                    onMessage( message );<a name="line.312"></a>
+<FONT color="green">313</FONT>            }<a name="line.313"></a>
+<FONT color="green">314</FONT>    <a name="line.314"></a>
+<FONT color="green">315</FONT>            @Override<a name="line.315"></a>
+<FONT color="green">316</FONT>            public final void onWebsocketMessage( WebSocket conn, ByteBuffer blob ) {<a name="line.316"></a>
+<FONT color="green">317</FONT>                    onMessage( blob );<a name="line.317"></a>
+<FONT color="green">318</FONT>            }<a name="line.318"></a>
+<FONT color="green">319</FONT>    <a name="line.319"></a>
+<FONT color="green">320</FONT>            /**<a name="line.320"></a>
+<FONT color="green">321</FONT>             * Calls subclass' implementation of &lt;var&gt;onOpen&lt;/var&gt;.<a name="line.321"></a>
+<FONT color="green">322</FONT>             * <a name="line.322"></a>
+<FONT color="green">323</FONT>             * @param conn<a name="line.323"></a>
+<FONT color="green">324</FONT>             */<a name="line.324"></a>
+<FONT color="green">325</FONT>            @Override<a name="line.325"></a>
+<FONT color="green">326</FONT>            public final void onWebsocketOpen( WebSocket conn, Handshakedata handshake ) {<a name="line.326"></a>
+<FONT color="green">327</FONT>                    connectLatch.countDown();<a name="line.327"></a>
+<FONT color="green">328</FONT>                    onOpen( (ServerHandshake) handshake );<a name="line.328"></a>
+<FONT color="green">329</FONT>            }<a name="line.329"></a>
+<FONT color="green">330</FONT>    <a name="line.330"></a>
+<FONT color="green">331</FONT>            /**<a name="line.331"></a>
+<FONT color="green">332</FONT>             * Calls subclass' implementation of &lt;var&gt;onClose&lt;/var&gt;.<a name="line.332"></a>
+<FONT color="green">333</FONT>             * <a name="line.333"></a>
+<FONT color="green">334</FONT>             * @param conn<a name="line.334"></a>
+<FONT color="green">335</FONT>             */<a name="line.335"></a>
+<FONT color="green">336</FONT>            @Override<a name="line.336"></a>
+<FONT color="green">337</FONT>            public final void onWebsocketClose( WebSocket conn, int code, String reason, boolean remote ) {<a name="line.337"></a>
+<FONT color="green">338</FONT>                    connectLatch.countDown();<a name="line.338"></a>
+<FONT color="green">339</FONT>                    closeLatch.countDown();<a name="line.339"></a>
+<FONT color="green">340</FONT>                    if( readthread != null )<a name="line.340"></a>
+<FONT color="green">341</FONT>                            readthread.interrupt();<a name="line.341"></a>
+<FONT color="green">342</FONT>                    onClose( code, reason, remote );<a name="line.342"></a>
+<FONT color="green">343</FONT>            }<a name="line.343"></a>
+<FONT color="green">344</FONT>    <a name="line.344"></a>
+<FONT color="green">345</FONT>            /**<a name="line.345"></a>
+<FONT color="green">346</FONT>             * Calls subclass' implementation of &lt;var&gt;onIOError&lt;/var&gt;.<a name="line.346"></a>
+<FONT color="green">347</FONT>             * <a name="line.347"></a>
+<FONT color="green">348</FONT>             * @param conn<a name="line.348"></a>
+<FONT color="green">349</FONT>             */<a name="line.349"></a>
+<FONT color="green">350</FONT>            @Override<a name="line.350"></a>
+<FONT color="green">351</FONT>            public final void onWebsocketError( WebSocket conn, Exception ex ) {<a name="line.351"></a>
+<FONT color="green">352</FONT>                    onError( ex );<a name="line.352"></a>
+<FONT color="green">353</FONT>            }<a name="line.353"></a>
+<FONT color="green">354</FONT>    <a name="line.354"></a>
+<FONT color="green">355</FONT>            @Override<a name="line.355"></a>
+<FONT color="green">356</FONT>            public final void onWriteDemand( WebSocket conn ) {<a name="line.356"></a>
+<FONT color="green">357</FONT>                    // nothing to do<a name="line.357"></a>
+<FONT color="green">358</FONT>            }<a name="line.358"></a>
+<FONT color="green">359</FONT>    <a name="line.359"></a>
+<FONT color="green">360</FONT>            @Override<a name="line.360"></a>
+<FONT color="green">361</FONT>            public void onWebsocketCloseInitiated( WebSocket conn, int code, String reason ) {<a name="line.361"></a>
+<FONT color="green">362</FONT>                    onCloseInitiated( code, reason );<a name="line.362"></a>
+<FONT color="green">363</FONT>            }<a name="line.363"></a>
+<FONT color="green">364</FONT>    <a name="line.364"></a>
+<FONT color="green">365</FONT>            @Override<a name="line.365"></a>
+<FONT color="green">366</FONT>            public void onWebsocketClosing( WebSocket conn, int code, String reason, boolean remote ) {<a name="line.366"></a>
+<FONT color="green">367</FONT>                    onClosing( code, reason, remote );<a name="line.367"></a>
+<FONT color="green">368</FONT>            }<a name="line.368"></a>
+<FONT color="green">369</FONT>    <a name="line.369"></a>
+<FONT color="green">370</FONT>            public void onCloseInitiated( int code, String reason ) {<a name="line.370"></a>
+<FONT color="green">371</FONT>            }<a name="line.371"></a>
+<FONT color="green">372</FONT>    <a name="line.372"></a>
+<FONT color="green">373</FONT>            public void onClosing( int code, String reason, boolean remote ) {<a name="line.373"></a>
+<FONT color="green">374</FONT>            }<a name="line.374"></a>
+<FONT color="green">375</FONT>    <a name="line.375"></a>
+<FONT color="green">376</FONT>            public WebSocket getConnection() {<a name="line.376"></a>
+<FONT color="green">377</FONT>                    return conn;<a name="line.377"></a>
+<FONT color="green">378</FONT>            }<a name="line.378"></a>
+<FONT color="green">379</FONT>    <a name="line.379"></a>
+<FONT color="green">380</FONT>            public final void setWebSocketFactory( WebSocketClientFactory wsf ) {<a name="line.380"></a>
+<FONT color="green">381</FONT>                    this.wsfactory = wsf;<a name="line.381"></a>
+<FONT color="green">382</FONT>            }<a name="line.382"></a>
+<FONT color="green">383</FONT>    <a name="line.383"></a>
+<FONT color="green">384</FONT>            public final WebSocketFactory getWebSocketFactory() {<a name="line.384"></a>
+<FONT color="green">385</FONT>                    return wsfactory;<a name="line.385"></a>
+<FONT color="green">386</FONT>            }<a name="line.386"></a>
+<FONT color="green">387</FONT>    <a name="line.387"></a>
+<FONT color="green">388</FONT>            @Override<a name="line.388"></a>
+<FONT color="green">389</FONT>            public InetSocketAddress getLocalSocketAddress( WebSocket conn ) {<a name="line.389"></a>
+<FONT color="green">390</FONT>                    if( channel != null )<a name="line.390"></a>
+<FONT color="green">391</FONT>                            return (InetSocketAddress) channel.socket().getLocalSocketAddress();<a name="line.391"></a>
+<FONT color="green">392</FONT>                    return null;<a name="line.392"></a>
+<FONT color="green">393</FONT>            }<a name="line.393"></a>
+<FONT color="green">394</FONT>    <a name="line.394"></a>
+<FONT color="green">395</FONT>            @Override<a name="line.395"></a>
+<FONT color="green">396</FONT>            public InetSocketAddress getRemoteSocketAddress( WebSocket conn ) {<a name="line.396"></a>
+<FONT color="green">397</FONT>                    if( channel != null )<a name="line.397"></a>
+<FONT color="green">398</FONT>                            return (InetSocketAddress) channel.socket().getLocalSocketAddress();<a name="line.398"></a>
+<FONT color="green">399</FONT>                    return null;<a name="line.399"></a>
+<FONT color="green">400</FONT>            }<a name="line.400"></a>
+<FONT color="green">401</FONT>    <a name="line.401"></a>
+<FONT color="green">402</FONT>            // ABTRACT METHODS /////////////////////////////////////////////////////////<a name="line.402"></a>
+<FONT color="green">403</FONT>            public abstract void onOpen( ServerHandshake handshakedata );<a name="line.403"></a>
+<FONT color="green">404</FONT>            public abstract void onMessage( String message );<a name="line.404"></a>
+<FONT color="green">405</FONT>            public abstract void onClose( int code, String reason, boolean remote );<a name="line.405"></a>
+<FONT color="green">406</FONT>            public abstract void onError( Exception ex );<a name="line.406"></a>
+<FONT color="green">407</FONT>            public void onMessage( ByteBuffer bytes ) {<a name="line.407"></a>
+<FONT color="green">408</FONT>            };<a name="line.408"></a>
+<FONT color="green">409</FONT>    <a name="line.409"></a>
+<FONT color="green">410</FONT>            public class DefaultClientProxyChannel extends AbstractClientProxyChannel {<a name="line.410"></a>
+<FONT color="green">411</FONT>                    public DefaultClientProxyChannel( ByteChannel towrap ) {<a name="line.411"></a>
+<FONT color="green">412</FONT>                            super( towrap );<a name="line.412"></a>
+<FONT color="green">413</FONT>                    }<a name="line.413"></a>
+<FONT color="green">414</FONT>                    @Override<a name="line.414"></a>
+<FONT color="green">415</FONT>                    public String buildHandShake() {<a name="line.415"></a>
+<FONT color="green">416</FONT>                            StringBuilder b = new StringBuilder();<a name="line.416"></a>
+<FONT color="green">417</FONT>                            String host = uri.getHost();<a name="line.417"></a>
+<FONT color="green">418</FONT>                            b.append( "CONNECT " );<a name="line.418"></a>
+<FONT color="green">419</FONT>                            b.append( host );<a name="line.419"></a>
+<FONT color="green">420</FONT>                            b.append( ":" );<a name="line.420"></a>
+<FONT color="green">421</FONT>                            b.append( getPort() );<a name="line.421"></a>
+<FONT color="green">422</FONT>                            b.append( " HTTP/1.1\n" );<a name="line.422"></a>
+<FONT color="green">423</FONT>                            b.append( "Host: " );<a name="line.423"></a>
+<FONT color="green">424</FONT>                            b.append( host );<a name="line.424"></a>
+<FONT color="green">425</FONT>                            b.append( "\n" );<a name="line.425"></a>
+<FONT color="green">426</FONT>                            return b.toString();<a name="line.426"></a>
+<FONT color="green">427</FONT>                    }<a name="line.427"></a>
+<FONT color="green">428</FONT>            }<a name="line.428"></a>
+<FONT color="green">429</FONT>    <a name="line.429"></a>
+<FONT color="green">430</FONT>            public interface WebSocketClientFactory extends WebSocketFactory {<a name="line.430"></a>
+<FONT color="green">431</FONT>                    public ByteChannel wrapChannel( SocketChannel channel, SelectionKey key, String host, int port ) throws IOException;<a name="line.431"></a>
+<FONT color="green">432</FONT>            }<a name="line.432"></a>
+<FONT color="green">433</FONT>    <a name="line.433"></a>
+<FONT color="green">434</FONT>            private class WebsocketWriteThread implements Runnable {<a name="line.434"></a>
+<FONT color="green">435</FONT>                    @Override<a name="line.435"></a>
+<FONT color="green">436</FONT>                    public void run() {<a name="line.436"></a>
+<FONT color="green">437</FONT>                            Thread.currentThread().setName( "WebsocketWriteThread" );<a name="line.437"></a>
+<FONT color="green">438</FONT>                            try {<a name="line.438"></a>
+<FONT color="green">439</FONT>                                    while ( !Thread.interrupted() ) {<a name="line.439"></a>
+<FONT color="green">440</FONT>                                            SocketChannelIOHelper.writeBlocking( conn, wrappedchannel );<a name="line.440"></a>
+<FONT color="green">441</FONT>                                    }<a name="line.441"></a>
+<FONT color="green">442</FONT>                            } catch ( IOException e ) {<a name="line.442"></a>
+<FONT color="green">443</FONT>                                    conn.eot();<a name="line.443"></a>
+<FONT color="green">444</FONT>                            } catch ( InterruptedException e ) {<a name="line.444"></a>
+<FONT color="green">445</FONT>                                    // this thread is regularly terminated via an interrupt<a name="line.445"></a>
+<FONT color="green">446</FONT>                            }<a name="line.446"></a>
+<FONT color="green">447</FONT>                    }<a name="line.447"></a>
+<FONT color="green">448</FONT>            }<a name="line.448"></a>
+<FONT color="green">449</FONT>            <a name="line.449"></a>
+<FONT color="green">450</FONT>            public ByteChannel createProxyChannel( ByteChannel towrap ) {<a name="line.450"></a>
+<FONT color="green">451</FONT>                    if( proxyAddress != null ){<a name="line.451"></a>
+<FONT color="green">452</FONT>                            return new DefaultClientProxyChannel( towrap );<a name="line.452"></a>
+<FONT color="green">453</FONT>                    }<a name="line.453"></a>
+<FONT color="green">454</FONT>                    return towrap;//no proxy in use<a name="line.454"></a>
+<FONT color="green">455</FONT>            }<a name="line.455"></a>
+<FONT color="green">456</FONT>    <a name="line.456"></a>
+<FONT color="green">457</FONT>            public void setProxy( InetSocketAddress proxyaddress ) {<a name="line.457"></a>
+<FONT color="green">458</FONT>                    proxyAddress = proxyaddress;<a name="line.458"></a>
+<FONT color="green">459</FONT>            }<a name="line.459"></a>
+<FONT color="green">460</FONT>    }<a name="line.460"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>

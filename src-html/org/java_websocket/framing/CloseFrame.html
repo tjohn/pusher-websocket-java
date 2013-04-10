@@ -1,0 +1,164 @@
+<HTML>
+<BODY BGCOLOR="white">
+<PRE>
+<FONT color="green">001</FONT>    package org.java_websocket.framing;<a name="line.1"></a>
+<FONT color="green">002</FONT>    <a name="line.2"></a>
+<FONT color="green">003</FONT>    import org.java_websocket.exceptions.InvalidDataException;<a name="line.3"></a>
+<FONT color="green">004</FONT>    import org.java_websocket.exceptions.InvalidFrameException;<a name="line.4"></a>
+<FONT color="green">005</FONT>    <a name="line.5"></a>
+<FONT color="green">006</FONT>    public interface CloseFrame extends Framedata {<a name="line.6"></a>
+<FONT color="green">007</FONT>            /**<a name="line.7"></a>
+<FONT color="green">008</FONT>             * indicates a normal closure, meaning whatever purpose the<a name="line.8"></a>
+<FONT color="green">009</FONT>             * connection was established for has been fulfilled.<a name="line.9"></a>
+<FONT color="green">010</FONT>             */<a name="line.10"></a>
+<FONT color="green">011</FONT>            public static final int NORMAL = 1000;<a name="line.11"></a>
+<FONT color="green">012</FONT>            /**<a name="line.12"></a>
+<FONT color="green">013</FONT>             * 1001 indicates that an endpoint is "going away", such as a server<a name="line.13"></a>
+<FONT color="green">014</FONT>             * going down, or a browser having navigated away from a page.<a name="line.14"></a>
+<FONT color="green">015</FONT>             */<a name="line.15"></a>
+<FONT color="green">016</FONT>            public static final int GOING_AWAY = 1001;<a name="line.16"></a>
+<FONT color="green">017</FONT>            /**<a name="line.17"></a>
+<FONT color="green">018</FONT>             * 1002 indicates that an endpoint is terminating the connection due<a name="line.18"></a>
+<FONT color="green">019</FONT>             * to a protocol error.<a name="line.19"></a>
+<FONT color="green">020</FONT>             */<a name="line.20"></a>
+<FONT color="green">021</FONT>            public static final int PROTOCOL_ERROR = 1002;<a name="line.21"></a>
+<FONT color="green">022</FONT>            /**<a name="line.22"></a>
+<FONT color="green">023</FONT>             * 1003 indicates that an endpoint is terminating the connection<a name="line.23"></a>
+<FONT color="green">024</FONT>             * because it has received a type of data it cannot accept (e.g. an<a name="line.24"></a>
+<FONT color="green">025</FONT>             * endpoint that understands only text data MAY send this if it<a name="line.25"></a>
+<FONT color="green">026</FONT>             * receives a binary message).<a name="line.26"></a>
+<FONT color="green">027</FONT>             */<a name="line.27"></a>
+<FONT color="green">028</FONT>            public static final int REFUSE = 1003;<a name="line.28"></a>
+<FONT color="green">029</FONT>            /*1004: Reserved. The specific meaning might be defined in the future.*/<a name="line.29"></a>
+<FONT color="green">030</FONT>            /**<a name="line.30"></a>
+<FONT color="green">031</FONT>             * 1005 is a reserved value and MUST NOT be set as a status code in a<a name="line.31"></a>
+<FONT color="green">032</FONT>             * Close control frame by an endpoint. It is designated for use in<a name="line.32"></a>
+<FONT color="green">033</FONT>             * applications expecting a status code to indicate that no status<a name="line.33"></a>
+<FONT color="green">034</FONT>             * code was actually present.<a name="line.34"></a>
+<FONT color="green">035</FONT>             */<a name="line.35"></a>
+<FONT color="green">036</FONT>            public static final int NOCODE = 1005;<a name="line.36"></a>
+<FONT color="green">037</FONT>            /**<a name="line.37"></a>
+<FONT color="green">038</FONT>             * 1006 is a reserved value and MUST NOT be set as a status code in a<a name="line.38"></a>
+<FONT color="green">039</FONT>             * Close control frame by an endpoint. It is designated for use in<a name="line.39"></a>
+<FONT color="green">040</FONT>             * applications expecting a status code to indicate that the<a name="line.40"></a>
+<FONT color="green">041</FONT>             * connection was closed abnormally, e.g. without sending or<a name="line.41"></a>
+<FONT color="green">042</FONT>             * receiving a Close control frame.<a name="line.42"></a>
+<FONT color="green">043</FONT>             */<a name="line.43"></a>
+<FONT color="green">044</FONT>            public static final int ABNORMAL_CLOSE = 1006;<a name="line.44"></a>
+<FONT color="green">045</FONT>            /**<a name="line.45"></a>
+<FONT color="green">046</FONT>             * 1007 indicates that an endpoint is terminating the connection<a name="line.46"></a>
+<FONT color="green">047</FONT>             * because it has received data within a message that was not<a name="line.47"></a>
+<FONT color="green">048</FONT>             * consistent with the type of the message (e.g., non-UTF-8 [RFC3629]<a name="line.48"></a>
+<FONT color="green">049</FONT>             * data within a text message).<a name="line.49"></a>
+<FONT color="green">050</FONT>             */<a name="line.50"></a>
+<FONT color="green">051</FONT>            public static final int NO_UTF8 = 1007;<a name="line.51"></a>
+<FONT color="green">052</FONT>            /**<a name="line.52"></a>
+<FONT color="green">053</FONT>             * 1008 indicates that an endpoint is terminating the connection<a name="line.53"></a>
+<FONT color="green">054</FONT>             * because it has received a message that violates its policy. This<a name="line.54"></a>
+<FONT color="green">055</FONT>             * is a generic status code that can be returned when there is no<a name="line.55"></a>
+<FONT color="green">056</FONT>             * other more suitable status code (e.g. 1003 or 1009), or if there<a name="line.56"></a>
+<FONT color="green">057</FONT>             * is a need to hide specific details about the policy.<a name="line.57"></a>
+<FONT color="green">058</FONT>             */<a name="line.58"></a>
+<FONT color="green">059</FONT>            public static final int POLICY_VALIDATION = 1008;<a name="line.59"></a>
+<FONT color="green">060</FONT>            /**<a name="line.60"></a>
+<FONT color="green">061</FONT>             * 1009 indicates that an endpoint is terminating the connection<a name="line.61"></a>
+<FONT color="green">062</FONT>             * because it has received a message which is too big for it to<a name="line.62"></a>
+<FONT color="green">063</FONT>             * process.<a name="line.63"></a>
+<FONT color="green">064</FONT>             */<a name="line.64"></a>
+<FONT color="green">065</FONT>            public static final int TOOBIG = 1009;<a name="line.65"></a>
+<FONT color="green">066</FONT>            /**<a name="line.66"></a>
+<FONT color="green">067</FONT>             * 1010 indicates that an endpoint (client) is terminating the<a name="line.67"></a>
+<FONT color="green">068</FONT>             * connection because it has expected the server to negotiate one or<a name="line.68"></a>
+<FONT color="green">069</FONT>             * more extension, but the server didn't return them in the response<a name="line.69"></a>
+<FONT color="green">070</FONT>             * message of the WebSocket handshake. The list of extensions which<a name="line.70"></a>
+<FONT color="green">071</FONT>             * are needed SHOULD appear in the /reason/ part of the Close frame.<a name="line.71"></a>
+<FONT color="green">072</FONT>             * Note that this status code is not used by the server, because it<a name="line.72"></a>
+<FONT color="green">073</FONT>             * can fail the WebSocket handshake instead.<a name="line.73"></a>
+<FONT color="green">074</FONT>             */<a name="line.74"></a>
+<FONT color="green">075</FONT>            public static final int EXTENSION = 1010;<a name="line.75"></a>
+<FONT color="green">076</FONT>            /**<a name="line.76"></a>
+<FONT color="green">077</FONT>             * 1011 indicates that a server is terminating the connection because<a name="line.77"></a>
+<FONT color="green">078</FONT>             * it encountered an unexpected condition that prevented it from<a name="line.78"></a>
+<FONT color="green">079</FONT>             * fulfilling the request.<a name="line.79"></a>
+<FONT color="green">080</FONT>             **/<a name="line.80"></a>
+<FONT color="green">081</FONT>            public static final int UNEXPECTED_CONDITION = 1011;<a name="line.81"></a>
+<FONT color="green">082</FONT>            /**<a name="line.82"></a>
+<FONT color="green">083</FONT>             * 1015 is a reserved value and MUST NOT be set as a status code in a<a name="line.83"></a>
+<FONT color="green">084</FONT>             * Close control frame by an endpoint. It is designated for use in<a name="line.84"></a>
+<FONT color="green">085</FONT>             * applications expecting a status code to indicate that the<a name="line.85"></a>
+<FONT color="green">086</FONT>             * connection was closed due to a failure to perform a TLS handshake<a name="line.86"></a>
+<FONT color="green">087</FONT>             * (e.g., the server certificate can't be verified).<a name="line.87"></a>
+<FONT color="green">088</FONT>             **/<a name="line.88"></a>
+<FONT color="green">089</FONT>            public static final int TLS_ERROR = 1015;<a name="line.89"></a>
+<FONT color="green">090</FONT>    <a name="line.90"></a>
+<FONT color="green">091</FONT>            /** The connection had never been established */<a name="line.91"></a>
+<FONT color="green">092</FONT>            public static final int NEVER_CONNECTED = -1;<a name="line.92"></a>
+<FONT color="green">093</FONT>            public static final int BUGGYCLOSE = -2;<a name="line.93"></a>
+<FONT color="green">094</FONT>            public static final int FLASHPOLICY = -3;<a name="line.94"></a>
+<FONT color="green">095</FONT>    <a name="line.95"></a>
+<FONT color="green">096</FONT>            public int getCloseCode() throws InvalidFrameException;<a name="line.96"></a>
+<FONT color="green">097</FONT>            public String getMessage() throws InvalidDataException;<a name="line.97"></a>
+<FONT color="green">098</FONT>    }<a name="line.98"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>
