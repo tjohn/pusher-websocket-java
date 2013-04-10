@@ -19,8 +19,8 @@
 	<licenses>
 		<license>
 			<name>MIT</name>
-			<url>https://raw.github.com/pusher/pusher-java-client/master/LICENCE.txt</url>
-			<distribution>https://raw.github.com/pusher/pusher-java-client/mvn-repo/</distribution>
+			<url>https://raw.github.com/leggetter/pusher-java-client/master/LICENCE.txt</url>
+			<distribution>https://raw.github.com/leggetter/pusher-java-client/mvn-repo/</distribution>
 		</license>
 	</licenses>
 
@@ -31,7 +31,7 @@
 
 	<issueManagement>
 		<system>Github</system>
-		<url>https://github.com/pusher/pusher-java-client/issues</url>
+		<url>https://github.com/leggetter/pusher-java-client/issues</url>
 	</issueManagement>
 
 	<build>
@@ -52,6 +52,18 @@
 
 		<plugins>
 		    
+		<plugin> 
+	      <artifactId>maven-javadoc-plugin</artifactId>
+	      <version>2.9</version>
+	      <executions> 
+	        <execution> 
+	          <id>attach-javadocs</id>
+	          <phase>deploy</phase>
+	          <goals><goal>jar</goal></goals> 
+	        </execution> 
+	      </executions> 
+	    </plugin>
+		    
 		  <plugin>
             <groupId>com.github.github</groupId>
             <artifactId>site-maven-plugin</artifactId>
@@ -59,7 +71,7 @@
             <configuration>
 				<server>github</server>
 				<repositoryName>pusher-java-client</repositoryName>      <!-- github repo name -->
-                <repositoryOwner>pusher</repositoryOwner>    <!-- github username  -->
+                <repositoryOwner>leggetter</repositoryOwner>    <!-- github username  -->
                 <noJekyll>true</noJekyll>                                  <!-- disable webpage processing -->
 			</configuration>
             <executions>
@@ -83,7 +95,7 @@
                 <id>javadoc</id>
          		<configuration>
                 	<message>JavaDoc gh-pages for ${project.version}</message>  <!-- git commit message -->
-                	<outputDirectory>${project.build.directory}/site/apidocs</outputDirectory> <!-- matches distribution management repository url above -->
+                	<outputDirectory>${project.build.directory}/apidocs</outputDirectory> <!-- matches distribution management repository url above -->
                 	<branch>refs/heads/gh-pages</branch>                       <!-- remote branch name -->
                 	<includes><include>**/*</include></includes>
             	</configuration>                  
@@ -162,48 +174,8 @@
 					<source>1.6</source>
 					<target>1.6</target>
 				</configuration>
-			</plugin> <!--
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>cobertura-maven-plugin</artifactId>
-				<version>2.5.2</version>
-				<configuration>
-					<check>
-						<haltOnFailure>false</haltOnFailure>
-						<branchRate>80</branchRate>
-						<lineRate>80</lineRate>
-						<packageLineRate>80</packageLineRate>
-						<packageBranchRate>80</packageBranchRate>
-						<totalBranchRate>80</totalBranchRate>
-						<totalLineRate>80</totalLineRate>		
-					</check>
-					<instrumentation>
-						<ignores>
-							<ignore>com.pusher.client.util.*</ignore>
-							<ignore>org.java_websocket.*</ignore>
-							<ignore>org.java_websocket.drafts.*</ignore>
-							<ignore>org.java_websocket.framing.*</ignore>
-						</ignores>
-						<excludes>
-							<exclude>com/pusher/client/util/*.class</exclude>
-							<exclude>com/pusher/client/*.class</exclude>
-							<exclude>org/java_websocket/**/*.class</exclude>
-						</excludes>
-					</instrumentation>					
-					<formats>
-						<format>html</format>
-						<format>xml</format>
-					</formats>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-						  <goal>clean</goal>
-						  <goal>check</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin> -->
+			</plugin>
+
 		</plugins>
 	</build>
 
