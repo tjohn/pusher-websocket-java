@@ -3,10 +3,9 @@
   <groupId>com.pusher</groupId>
   <artifactId>pusher-java-client</artifactId>
   <versioning>
-    <release>0.0.1-beta.1</release>
     <versions>
-      <version>0.0.1-beta.1</version>
+      <version>0.1.0-beta.1-SNAPSHOT</version>
     </versions>
-    <lastUpdated>20130410174933</lastUpdated>
+    <lastUpdated>20130502181308</lastUpdated>
   </versioning>
 </metadata>
