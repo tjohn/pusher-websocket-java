@@ -1,140 +1,150 @@
-<HTML>
-<BODY BGCOLOR="white">
-<PRE>
-<FONT color="green">001</FONT>    package com.pusher.client.util;<a name="line.1"></a>
-<FONT color="green">002</FONT>    <a name="line.2"></a>
-<FONT color="green">003</FONT>    import java.io.BufferedReader;<a name="line.3"></a>
-<FONT color="green">004</FONT>    import java.io.DataOutputStream;<a name="line.4"></a>
-<FONT color="green">005</FONT>    import java.io.IOException;<a name="line.5"></a>
-<FONT color="green">006</FONT>    import java.io.InputStream;<a name="line.6"></a>
-<FONT color="green">007</FONT>    import java.io.InputStreamReader;<a name="line.7"></a>
-<FONT color="green">008</FONT>    import java.net.HttpURLConnection;<a name="line.8"></a>
-<FONT color="green">009</FONT>    import java.net.MalformedURLException;<a name="line.9"></a>
-<FONT color="green">010</FONT>    import java.net.URL;<a name="line.10"></a>
-<FONT color="green">011</FONT>    import java.net.URLEncoder;<a name="line.11"></a>
-<FONT color="green">012</FONT>    import java.util.HashMap;<a name="line.12"></a>
-<FONT color="green">013</FONT>    <a name="line.13"></a>
-<FONT color="green">014</FONT>    import javax.net.ssl.HttpsURLConnection;<a name="line.14"></a>
-<FONT color="green">015</FONT>    <a name="line.15"></a>
-<FONT color="green">016</FONT>    import com.pusher.client.AuthorizationFailureException;<a name="line.16"></a>
-<FONT color="green">017</FONT>    import com.pusher.client.Authorizer;<a name="line.17"></a>
-<FONT color="green">018</FONT>    <a name="line.18"></a>
-<FONT color="green">019</FONT>    /**<a name="line.19"></a>
-<FONT color="green">020</FONT>     * Used to authenticate a {@link com.pusher.client.channel.PrivateChannel private} or {@link com.pusher.client.channel.PresenceChannel presence}<a name="line.20"></a>
-<FONT color="green">021</FONT>     * channel subscription.<a name="line.21"></a>
-<FONT color="green">022</FONT>     * <a name="line.22"></a>
-<FONT color="green">023</FONT>     * &lt;p&gt;Makes an HTTP request to a defined HTTP endpoint. Expects an authentication token to be returned.&lt;/p&gt;<a name="line.23"></a>
-<FONT color="green">024</FONT>     * <a name="line.24"></a>
-<FONT color="green">025</FONT>     * &lt;p&gt;For more information see the &lt;a href="http://pusher.com/docs/authenticating_users"&gt;Authenticating Users documentation&lt;/a&gt;.<a name="line.25"></a>
-<FONT color="green">026</FONT>     */<a name="line.26"></a>
-<FONT color="green">027</FONT>    public class HttpAuthorizer implements Authorizer {<a name="line.27"></a>
-<FONT color="green">028</FONT>    <a name="line.28"></a>
-<FONT color="green">029</FONT>            private final URL endPoint;<a name="line.29"></a>
-<FONT color="green">030</FONT>            private HashMap&lt;String, String&gt; mHeaders = new HashMap&lt;String, String&gt;();<a name="line.30"></a>
-<FONT color="green">031</FONT>            private HashMap&lt;String, String&gt; mQueryStringParameters = new HashMap&lt;String, String&gt;();<a name="line.31"></a>
-<FONT color="green">032</FONT>            private final String ENCODING_CHARACTER_SET = "UTF-8";<a name="line.32"></a>
-<FONT color="green">033</FONT>    <a name="line.33"></a>
-<FONT color="green">034</FONT>            /**<a name="line.34"></a>
-<FONT color="green">035</FONT>             * Creates a new authorizer.<a name="line.35"></a>
-<FONT color="green">036</FONT>             * @param endPoint The endpoint to be called when authenticating.<a name="line.36"></a>
-<FONT color="green">037</FONT>             */<a name="line.37"></a>
-<FONT color="green">038</FONT>            public HttpAuthorizer(String endPoint) {<a name="line.38"></a>
-<FONT color="green">039</FONT>                    try {<a name="line.39"></a>
-<FONT color="green">040</FONT>                            this.endPoint = Factory.newURL(endPoint);<a name="line.40"></a>
-<FONT color="green">041</FONT>                    } catch (MalformedURLException e) {<a name="line.41"></a>
-<FONT color="green">042</FONT>                            throw new IllegalArgumentException(<a name="line.42"></a>
-<FONT color="green">043</FONT>                                            "Could not parse authentication end point into a valid URL", e);<a name="line.43"></a>
-<FONT color="green">044</FONT>                    }<a name="line.44"></a>
-<FONT color="green">045</FONT>            }<a name="line.45"></a>
-<FONT color="green">046</FONT>            <a name="line.46"></a>
-<FONT color="green">047</FONT>            /**<a name="line.47"></a>
-<FONT color="green">048</FONT>             * Set additional headers to be sent as part of the request.<a name="line.48"></a>
-<FONT color="green">049</FONT>             * @param headers<a name="line.49"></a>
-<FONT color="green">050</FONT>             */<a name="line.50"></a>
-<FONT color="green">051</FONT>            public void setHeaders(HashMap&lt;String, String&gt; headers) {<a name="line.51"></a>
-<FONT color="green">052</FONT>                    this.mHeaders = headers;<a name="line.52"></a>
-<FONT color="green">053</FONT>            }<a name="line.53"></a>
-<FONT color="green">054</FONT>            <a name="line.54"></a>
-<FONT color="green">055</FONT>            /**<a name="line.55"></a>
-<FONT color="green">056</FONT>             * Identifies if the HTTP request will be sent over HTTPS.<a name="line.56"></a>
-<FONT color="green">057</FONT>             * @return <a name="line.57"></a>
-<FONT color="green">058</FONT>             */<a name="line.58"></a>
-<FONT color="green">059</FONT>            public Boolean isSSL() {<a name="line.59"></a>
-<FONT color="green">060</FONT>                    return this.endPoint.getProtocol().equals("https");<a name="line.60"></a>
-<FONT color="green">061</FONT>            }<a name="line.61"></a>
-<FONT color="green">062</FONT>    <a name="line.62"></a>
-<FONT color="green">063</FONT>            /**<a name="line.63"></a>
-<FONT color="green">064</FONT>             * This methods is for passing extra parameters authentication that needs to be added to query string.<a name="line.64"></a>
-<FONT color="green">065</FONT>             * @param queryStringParameters the query parameters<a name="line.65"></a>
-<FONT color="green">066</FONT>             */<a name="line.66"></a>
-<FONT color="green">067</FONT>            public void setQueryStringParameters(HashMap&lt;String, String&gt; queryStringParameters) {<a name="line.67"></a>
-<FONT color="green">068</FONT>                    this.mQueryStringParameters = queryStringParameters;<a name="line.68"></a>
-<FONT color="green">069</FONT>            }<a name="line.69"></a>
-<FONT color="green">070</FONT>            <a name="line.70"></a>
-<FONT color="green">071</FONT>            @Override<a name="line.71"></a>
-<FONT color="green">072</FONT>            public String authorize(String channelName, String socketId)<a name="line.72"></a>
-<FONT color="green">073</FONT>                            throws AuthorizationFailureException {<a name="line.73"></a>
-<FONT color="green">074</FONT>    <a name="line.74"></a>
-<FONT color="green">075</FONT>                    try {<a name="line.75"></a>
-<FONT color="green">076</FONT>                            StringBuffer urlParameters = new StringBuffer(); <a name="line.76"></a>
-<FONT color="green">077</FONT>                            urlParameters.append("channel_name=").append(URLEncoder.encode(channelName, ENCODING_CHARACTER_SET));<a name="line.77"></a>
-<FONT color="green">078</FONT>                            urlParameters.append("&amp;socket_id=").append(URLEncoder.encode(socketId, ENCODING_CHARACTER_SET));<a name="line.78"></a>
-<FONT color="green">079</FONT>                            <a name="line.79"></a>
-<FONT color="green">080</FONT>    <a name="line.80"></a>
-<FONT color="green">081</FONT>                            // Adding extra parameters supplied to be added to query string.<a name="line.81"></a>
-<FONT color="green">082</FONT>                            for(String parameterName : mQueryStringParameters.keySet()){<a name="line.82"></a>
-<FONT color="green">083</FONT>                                    urlParameters.append("&amp;").append(parameterName).append("=");<a name="line.83"></a>
-<FONT color="green">084</FONT>                                    urlParameters.append(URLEncoder.encode(mQueryStringParameters.get(parameterName), ENCODING_CHARACTER_SET));<a name="line.84"></a>
-<FONT color="green">085</FONT>                            }<a name="line.85"></a>
-<FONT color="green">086</FONT>                            <a name="line.86"></a>
-<FONT color="green">087</FONT>                            HttpURLConnection connection = null;<a name="line.87"></a>
-<FONT color="green">088</FONT>                            if( this.isSSL() ) {<a name="line.88"></a>
-<FONT color="green">089</FONT>                                    connection = (HttpsURLConnection) endPoint.openConnection();<a name="line.89"></a>
-<FONT color="green">090</FONT>                            }<a name="line.90"></a>
-<FONT color="green">091</FONT>                            else {<a name="line.91"></a>
-<FONT color="green">092</FONT>                                    connection = (HttpURLConnection) endPoint.openConnection();<a name="line.92"></a>
-<FONT color="green">093</FONT>                            }<a name="line.93"></a>
-<FONT color="green">094</FONT>                            connection.setDoOutput(true);<a name="line.94"></a>
-<FONT color="green">095</FONT>                            connection.setDoInput(true);<a name="line.95"></a>
-<FONT color="green">096</FONT>                            connection.setInstanceFollowRedirects(false);<a name="line.96"></a>
-<FONT color="green">097</FONT>                            connection.setRequestMethod("POST");<a name="line.97"></a>
-<FONT color="green">098</FONT>                            connection.setRequestProperty("Content-Type",<a name="line.98"></a>
-<FONT color="green">099</FONT>                                            "application/x-www-form-urlencoded");<a name="line.99"></a>
-<FONT color="green">100</FONT>                            connection.setRequestProperty("charset", "utf-8");<a name="line.100"></a>
-<FONT color="green">101</FONT>                            connection.setRequestProperty("Content-Length",<a name="line.101"></a>
-<FONT color="green">102</FONT>                                            "" + Integer.toString(urlParameters.toString().getBytes().length));<a name="line.102"></a>
-<FONT color="green">103</FONT>    <a name="line.103"></a>
-<FONT color="green">104</FONT>                            // Add in the user defined headers<a name="line.104"></a>
-<FONT color="green">105</FONT>                            for (String headerName : mHeaders.keySet()) {<a name="line.105"></a>
-<FONT color="green">106</FONT>                                    String headerValue = mHeaders.get(headerName);<a name="line.106"></a>
-<FONT color="green">107</FONT>                                    connection.setRequestProperty(headerName, headerValue);<a name="line.107"></a>
-<FONT color="green">108</FONT>                            }<a name="line.108"></a>
-<FONT color="green">109</FONT>    <a name="line.109"></a>
-<FONT color="green">110</FONT>                            connection.setUseCaches(false);<a name="line.110"></a>
-<FONT color="green">111</FONT>    <a name="line.111"></a>
-<FONT color="green">112</FONT>                            // Send request<a name="line.112"></a>
-<FONT color="green">113</FONT>                            DataOutputStream wr = new DataOutputStream(connection.getOutputStream());<a name="line.113"></a>
-<FONT color="green">114</FONT>                            wr.writeBytes(urlParameters.toString());<a name="line.114"></a>
-<FONT color="green">115</FONT>                            wr.flush();<a name="line.115"></a>
-<FONT color="green">116</FONT>                            wr.close();<a name="line.116"></a>
-<FONT color="green">117</FONT>    <a name="line.117"></a>
-<FONT color="green">118</FONT>                            // Read response<a name="line.118"></a>
-<FONT color="green">119</FONT>                            InputStream is = connection.getInputStream();<a name="line.119"></a>
-<FONT color="green">120</FONT>                            BufferedReader rd = new BufferedReader(new InputStreamReader(is));<a name="line.120"></a>
-<FONT color="green">121</FONT>                            String line;<a name="line.121"></a>
-<FONT color="green">122</FONT>                            StringBuffer response = new StringBuffer();<a name="line.122"></a>
-<FONT color="green">123</FONT>                            while ((line = rd.readLine()) != null) {<a name="line.123"></a>
-<FONT color="green">124</FONT>                                    response.append(line);<a name="line.124"></a>
-<FONT color="green">125</FONT>                            }<a name="line.125"></a>
-<FONT color="green">126</FONT>                            rd.close();<a name="line.126"></a>
-<FONT color="green">127</FONT>    <a name="line.127"></a>
-<FONT color="green">128</FONT>                            return response.toString();<a name="line.128"></a>
-<FONT color="green">129</FONT>    <a name="line.129"></a>
-<FONT color="green">130</FONT>                    } catch (IOException e) {<a name="line.130"></a>
-<FONT color="green">131</FONT>                            throw new AuthorizationFailureException(e);<a name="line.131"></a>
-<FONT color="green">132</FONT>                    }<a name="line.132"></a>
-<FONT color="green">133</FONT>            }<a name="line.133"></a>
-<FONT color="green">134</FONT>    }<a name="line.134"></a>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../styles.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>package com.pusher.client.util;<a name="line.1"></a>
+<span class="sourceLineNo">002</span><a name="line.2"></a>
+<span class="sourceLineNo">003</span>import java.io.BufferedReader;<a name="line.3"></a>
+<span class="sourceLineNo">004</span>import java.io.DataOutputStream;<a name="line.4"></a>
+<span class="sourceLineNo">005</span>import java.io.IOException;<a name="line.5"></a>
+<span class="sourceLineNo">006</span>import java.io.InputStream;<a name="line.6"></a>
+<span class="sourceLineNo">007</span>import java.io.InputStreamReader;<a name="line.7"></a>
+<span class="sourceLineNo">008</span>import java.net.HttpURLConnection;<a name="line.8"></a>
+<span class="sourceLineNo">009</span>import java.net.MalformedURLException;<a name="line.9"></a>
+<span class="sourceLineNo">010</span>import java.net.URL;<a name="line.10"></a>
+<span class="sourceLineNo">011</span>import java.net.URLEncoder;<a name="line.11"></a>
+<span class="sourceLineNo">012</span>import java.util.HashMap;<a name="line.12"></a>
+<span class="sourceLineNo">013</span><a name="line.13"></a>
+<span class="sourceLineNo">014</span>import javax.net.ssl.HttpsURLConnection;<a name="line.14"></a>
+<span class="sourceLineNo">015</span><a name="line.15"></a>
+<span class="sourceLineNo">016</span>import com.pusher.client.AuthorizationFailureException;<a name="line.16"></a>
+<span class="sourceLineNo">017</span>import com.pusher.client.Authorizer;<a name="line.17"></a>
+<span class="sourceLineNo">018</span><a name="line.18"></a>
+<span class="sourceLineNo">019</span>/**<a name="line.19"></a>
+<span class="sourceLineNo">020</span> * Used to authenticate a {@link com.pusher.client.channel.PrivateChannel private} or {@link com.pusher.client.channel.PresenceChannel presence}<a name="line.20"></a>
+<span class="sourceLineNo">021</span> * channel subscription.<a name="line.21"></a>
+<span class="sourceLineNo">022</span> * <a name="line.22"></a>
+<span class="sourceLineNo">023</span> * &lt;p&gt;Makes an HTTP request to a defined HTTP endpoint. Expects an authentication token to be returned.&lt;/p&gt;<a name="line.23"></a>
+<span class="sourceLineNo">024</span> * <a name="line.24"></a>
+<span class="sourceLineNo">025</span> * &lt;p&gt;For more information see the &lt;a href="http://pusher.com/docs/authenticating_users"&gt;Authenticating Users documentation&lt;/a&gt;.<a name="line.25"></a>
+<span class="sourceLineNo">026</span> */<a name="line.26"></a>
+<span class="sourceLineNo">027</span>public class HttpAuthorizer implements Authorizer {<a name="line.27"></a>
+<span class="sourceLineNo">028</span><a name="line.28"></a>
+<span class="sourceLineNo">029</span>        private final URL endPoint;<a name="line.29"></a>
+<span class="sourceLineNo">030</span>        private HashMap&lt;String, String&gt; mHeaders = new HashMap&lt;String, String&gt;();<a name="line.30"></a>
+<span class="sourceLineNo">031</span>        private HashMap&lt;String, String&gt; mQueryStringParameters = new HashMap&lt;String, String&gt;();<a name="line.31"></a>
+<span class="sourceLineNo">032</span>        private final String ENCODING_CHARACTER_SET = "UTF-8";<a name="line.32"></a>
+<span class="sourceLineNo">033</span><a name="line.33"></a>
+<span class="sourceLineNo">034</span>        /**<a name="line.34"></a>
+<span class="sourceLineNo">035</span>         * Creates a new authorizer.<a name="line.35"></a>
+<span class="sourceLineNo">036</span>         * @param endPoint The endpoint to be called when authenticating.<a name="line.36"></a>
+<span class="sourceLineNo">037</span>         */<a name="line.37"></a>
+<span class="sourceLineNo">038</span>        public HttpAuthorizer(String endPoint) {<a name="line.38"></a>
+<span class="sourceLineNo">039</span>                try {<a name="line.39"></a>
+<span class="sourceLineNo">040</span>                        this.endPoint = Factory.newURL(endPoint);<a name="line.40"></a>
+<span class="sourceLineNo">041</span>                } catch (MalformedURLException e) {<a name="line.41"></a>
+<span class="sourceLineNo">042</span>                        throw new IllegalArgumentException(<a name="line.42"></a>
+<span class="sourceLineNo">043</span>                                        "Could not parse authentication end point into a valid URL", e);<a name="line.43"></a>
+<span class="sourceLineNo">044</span>                }<a name="line.44"></a>
+<span class="sourceLineNo">045</span>        }<a name="line.45"></a>
+<span class="sourceLineNo">046</span>        <a name="line.46"></a>
+<span class="sourceLineNo">047</span>        /**<a name="line.47"></a>
+<span class="sourceLineNo">048</span>         * Set additional headers to be sent as part of the request.<a name="line.48"></a>
+<span class="sourceLineNo">049</span>         * @param headers<a name="line.49"></a>
+<span class="sourceLineNo">050</span>         */<a name="line.50"></a>
+<span class="sourceLineNo">051</span>        public void setHeaders(HashMap&lt;String, String&gt; headers) {<a name="line.51"></a>
+<span class="sourceLineNo">052</span>                this.mHeaders = headers;<a name="line.52"></a>
+<span class="sourceLineNo">053</span>        }<a name="line.53"></a>
+<span class="sourceLineNo">054</span>        <a name="line.54"></a>
+<span class="sourceLineNo">055</span>        /**<a name="line.55"></a>
+<span class="sourceLineNo">056</span>         * Identifies if the HTTP request will be sent over HTTPS.<a name="line.56"></a>
+<span class="sourceLineNo">057</span>         * @return <a name="line.57"></a>
+<span class="sourceLineNo">058</span>         */<a name="line.58"></a>
+<span class="sourceLineNo">059</span>        public Boolean isSSL() {<a name="line.59"></a>
+<span class="sourceLineNo">060</span>                return this.endPoint.getProtocol().equals("https");<a name="line.60"></a>
+<span class="sourceLineNo">061</span>        }<a name="line.61"></a>
+<span class="sourceLineNo">062</span><a name="line.62"></a>
+<span class="sourceLineNo">063</span>        /**<a name="line.63"></a>
+<span class="sourceLineNo">064</span>         * This methods is for passing extra parameters authentication that needs to be added to query string.<a name="line.64"></a>
+<span class="sourceLineNo">065</span>         * @param queryStringParameters the query parameters<a name="line.65"></a>
+<span class="sourceLineNo">066</span>         */<a name="line.66"></a>
+<span class="sourceLineNo">067</span>        public void setQueryStringParameters(HashMap&lt;String, String&gt; queryStringParameters) {<a name="line.67"></a>
+<span class="sourceLineNo">068</span>                this.mQueryStringParameters = queryStringParameters;<a name="line.68"></a>
+<span class="sourceLineNo">069</span>        }<a name="line.69"></a>
+<span class="sourceLineNo">070</span>        <a name="line.70"></a>
+<span class="sourceLineNo">071</span>        @Override<a name="line.71"></a>
+<span class="sourceLineNo">072</span>        public String authorize(String channelName, String socketId)<a name="line.72"></a>
+<span class="sourceLineNo">073</span>                        throws AuthorizationFailureException {<a name="line.73"></a>
+<span class="sourceLineNo">074</span><a name="line.74"></a>
+<span class="sourceLineNo">075</span>                try {<a name="line.75"></a>
+<span class="sourceLineNo">076</span>                        StringBuffer urlParameters = new StringBuffer(); <a name="line.76"></a>
+<span class="sourceLineNo">077</span>                        urlParameters.append("channel_name=").append(URLEncoder.encode(channelName, ENCODING_CHARACTER_SET));<a name="line.77"></a>
+<span class="sourceLineNo">078</span>                        urlParameters.append("&amp;socket_id=").append(URLEncoder.encode(socketId, ENCODING_CHARACTER_SET));<a name="line.78"></a>
+<span class="sourceLineNo">079</span>                        <a name="line.79"></a>
+<span class="sourceLineNo">080</span><a name="line.80"></a>
+<span class="sourceLineNo">081</span>                        // Adding extra parameters supplied to be added to query string.<a name="line.81"></a>
+<span class="sourceLineNo">082</span>                        for(String parameterName : mQueryStringParameters.keySet()){<a name="line.82"></a>
+<span class="sourceLineNo">083</span>                                urlParameters.append("&amp;").append(parameterName).append("=");<a name="line.83"></a>
+<span class="sourceLineNo">084</span>                                urlParameters.append(URLEncoder.encode(mQueryStringParameters.get(parameterName), ENCODING_CHARACTER_SET));<a name="line.84"></a>
+<span class="sourceLineNo">085</span>                        }<a name="line.85"></a>
+<span class="sourceLineNo">086</span>                        <a name="line.86"></a>
+<span class="sourceLineNo">087</span>                        HttpURLConnection connection = null;<a name="line.87"></a>
+<span class="sourceLineNo">088</span>                        if( this.isSSL() ) {<a name="line.88"></a>
+<span class="sourceLineNo">089</span>                                connection = (HttpsURLConnection) endPoint.openConnection();<a name="line.89"></a>
+<span class="sourceLineNo">090</span>                        }<a name="line.90"></a>
+<span class="sourceLineNo">091</span>                        else {<a name="line.91"></a>
+<span class="sourceLineNo">092</span>                                connection = (HttpURLConnection) endPoint.openConnection();<a name="line.92"></a>
+<span class="sourceLineNo">093</span>                        }<a name="line.93"></a>
+<span class="sourceLineNo">094</span>                        connection.setDoOutput(true);<a name="line.94"></a>
+<span class="sourceLineNo">095</span>                        connection.setDoInput(true);<a name="line.95"></a>
+<span class="sourceLineNo">096</span>                        connection.setInstanceFollowRedirects(false);<a name="line.96"></a>
+<span class="sourceLineNo">097</span>                        connection.setRequestMethod("POST");<a name="line.97"></a>
+<span class="sourceLineNo">098</span>                        connection.setRequestProperty("Content-Type",<a name="line.98"></a>
+<span class="sourceLineNo">099</span>                                        "application/x-www-form-urlencoded");<a name="line.99"></a>
+<span class="sourceLineNo">100</span>                        connection.setRequestProperty("charset", "utf-8");<a name="line.100"></a>
+<span class="sourceLineNo">101</span>                        connection.setRequestProperty("Content-Length",<a name="line.101"></a>
+<span class="sourceLineNo">102</span>                                        "" + Integer.toString(urlParameters.toString().getBytes().length));<a name="line.102"></a>
+<span class="sourceLineNo">103</span><a name="line.103"></a>
+<span class="sourceLineNo">104</span>                        // Add in the user defined headers<a name="line.104"></a>
+<span class="sourceLineNo">105</span>                        for (String headerName : mHeaders.keySet()) {<a name="line.105"></a>
+<span class="sourceLineNo">106</span>                                String headerValue = mHeaders.get(headerName);<a name="line.106"></a>
+<span class="sourceLineNo">107</span>                                connection.setRequestProperty(headerName, headerValue);<a name="line.107"></a>
+<span class="sourceLineNo">108</span>                        }<a name="line.108"></a>
+<span class="sourceLineNo">109</span><a name="line.109"></a>
+<span class="sourceLineNo">110</span>                        connection.setUseCaches(false);<a name="line.110"></a>
+<span class="sourceLineNo">111</span><a name="line.111"></a>
+<span class="sourceLineNo">112</span>                        // Send request<a name="line.112"></a>
+<span class="sourceLineNo">113</span>                        DataOutputStream wr = new DataOutputStream(connection.getOutputStream());<a name="line.113"></a>
+<span class="sourceLineNo">114</span>                        wr.writeBytes(urlParameters.toString());<a name="line.114"></a>
+<span class="sourceLineNo">115</span>                        wr.flush();<a name="line.115"></a>
+<span class="sourceLineNo">116</span>                        wr.close();<a name="line.116"></a>
+<span class="sourceLineNo">117</span><a name="line.117"></a>
+<span class="sourceLineNo">118</span>                        // Read response                        <a name="line.118"></a>
+<span class="sourceLineNo">119</span>                        InputStream is = connection.getInputStream();<a name="line.119"></a>
+<span class="sourceLineNo">120</span>                        BufferedReader rd = new BufferedReader(new InputStreamReader(is));<a name="line.120"></a>
+<span class="sourceLineNo">121</span>                        String line;<a name="line.121"></a>
+<span class="sourceLineNo">122</span>                        StringBuffer response = new StringBuffer();<a name="line.122"></a>
+<span class="sourceLineNo">123</span>                        while ((line = rd.readLine()) != null) {<a name="line.123"></a>
+<span class="sourceLineNo">124</span>                                response.append(line);<a name="line.124"></a>
+<span class="sourceLineNo">125</span>                        }<a name="line.125"></a>
+<span class="sourceLineNo">126</span>                        rd.close();<a name="line.126"></a>
+<span class="sourceLineNo">127</span>                        <a name="line.127"></a>
+<span class="sourceLineNo">128</span>                        int responseHttpStatus = connection.getResponseCode();<a name="line.128"></a>
+<span class="sourceLineNo">129</span>                        if( responseHttpStatus != 200 ) {<a name="line.129"></a>
+<span class="sourceLineNo">130</span>                                throw new AuthorizationFailureException( response.toString() );<a name="line.130"></a>
+<span class="sourceLineNo">131</span>                        }<a name="line.131"></a>
+<span class="sourceLineNo">132</span><a name="line.132"></a>
+<span class="sourceLineNo">133</span>                        return response.toString();<a name="line.133"></a>
+<span class="sourceLineNo">134</span><a name="line.134"></a>
+<span class="sourceLineNo">135</span>                } catch (IOException e) {<a name="line.135"></a>
+<span class="sourceLineNo">136</span>                        throw new AuthorizationFailureException(e);<a name="line.136"></a>
+<span class="sourceLineNo">137</span>                }<a name="line.137"></a>
+<span class="sourceLineNo">138</span>        }<a name="line.138"></a>
+<span class="sourceLineNo">139</span>}<a name="line.139"></a>
 
 
 
@@ -195,6 +205,7 @@
 
 
 
-</PRE>
-</BODY>
-</HTML>
+</pre>
+</div>
+</body>
+</html>
