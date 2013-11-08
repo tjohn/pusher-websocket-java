@@ -1,5 +1,4 @@
 com.pusher.client
 com.pusher.client.channel
 com.pusher.client.connection
-com.pusher.client.example
 com.pusher.client.util
