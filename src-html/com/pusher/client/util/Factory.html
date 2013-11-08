@@ -1,107 +1,103 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html lang="en">
-<head>
-<title>Source code</title>
-<link rel="stylesheet" type="text/css" href="../../../../../styles.css" title="Style">
-</head>
-<body>
-<div class="sourceContainer">
-<pre><span class="sourceLineNo">001</span>package com.pusher.client.util;<a name="line.1"></a>
-<span class="sourceLineNo">002</span><a name="line.2"></a>
-<span class="sourceLineNo">003</span>import java.net.MalformedURLException;<a name="line.3"></a>
-<span class="sourceLineNo">004</span>import java.net.URI;<a name="line.4"></a>
-<span class="sourceLineNo">005</span>import java.net.URISyntaxException;<a name="line.5"></a>
-<span class="sourceLineNo">006</span>import java.net.URL;<a name="line.6"></a>
-<span class="sourceLineNo">007</span>import java.util.concurrent.ExecutorService;<a name="line.7"></a>
-<span class="sourceLineNo">008</span>import java.util.concurrent.Executors;<a name="line.8"></a>
-<span class="sourceLineNo">009</span><a name="line.9"></a>
-<span class="sourceLineNo">010</span>import javax.net.ssl.SSLException;<a name="line.10"></a>
-<span class="sourceLineNo">011</span><a name="line.11"></a>
-<span class="sourceLineNo">012</span>import org.java_websocket.client.WebSocketClient;<a name="line.12"></a>
-<span class="sourceLineNo">013</span><a name="line.13"></a>
-<span class="sourceLineNo">014</span>import com.pusher.client.Authorizer;<a name="line.14"></a>
-<span class="sourceLineNo">015</span>import com.pusher.client.channel.impl.ChannelImpl;<a name="line.15"></a>
-<span class="sourceLineNo">016</span>import com.pusher.client.channel.impl.ChannelManager;<a name="line.16"></a>
-<span class="sourceLineNo">017</span>import com.pusher.client.channel.impl.PresenceChannelImpl;<a name="line.17"></a>
-<span class="sourceLineNo">018</span>import com.pusher.client.channel.impl.PrivateChannelImpl;<a name="line.18"></a>
-<span class="sourceLineNo">019</span>import com.pusher.client.connection.impl.InternalConnection;<a name="line.19"></a>
-<span class="sourceLineNo">020</span>import com.pusher.client.connection.websocket.WebSocketClientWrapper;<a name="line.20"></a>
-<span class="sourceLineNo">021</span>import com.pusher.client.connection.websocket.WebSocketConnection;<a name="line.21"></a>
-<span class="sourceLineNo">022</span>import com.pusher.client.connection.websocket.WebSocketListener;<a name="line.22"></a>
-<span class="sourceLineNo">023</span><a name="line.23"></a>
-<span class="sourceLineNo">024</span>/**<a name="line.24"></a>
-<span class="sourceLineNo">025</span> * This is a lightweight way of doing dependency injection and enabling classes<a name="line.25"></a>
-<span class="sourceLineNo">026</span> * to be unit tested in isolation. No class in this library instantiates another<a name="line.26"></a>
-<span class="sourceLineNo">027</span> * class directly, otherwise they would be tightly coupled. Instead, they all<a name="line.27"></a>
-<span class="sourceLineNo">028</span> * call the factory methods in this class when they want to create instances of<a name="line.28"></a>
-<span class="sourceLineNo">029</span> * another class.<a name="line.29"></a>
-<span class="sourceLineNo">030</span> * <a name="line.30"></a>
-<span class="sourceLineNo">031</span> * When unit testing we can use PowerMock to mock out the methods in this class<a name="line.31"></a>
-<span class="sourceLineNo">032</span> * to return mocks instead of the actual implementations. This allows us to test<a name="line.32"></a>
-<span class="sourceLineNo">033</span> * classes in isolation.<a name="line.33"></a>
-<span class="sourceLineNo">034</span> * <a name="line.34"></a>
-<span class="sourceLineNo">035</span> * Conventions:<a name="line.35"></a>
-<span class="sourceLineNo">036</span> * <a name="line.36"></a>
-<span class="sourceLineNo">037</span> * - any method that starts with "new", such as<a name="line.37"></a>
-<span class="sourceLineNo">038</span> * {@link #newPublicChannel(String)} creates a new instance of that class every<a name="line.38"></a>
-<span class="sourceLineNo">039</span> * time it is called.<a name="line.39"></a>
-<span class="sourceLineNo">040</span> * <a name="line.40"></a>
-<span class="sourceLineNo">041</span> * - any method that starts with "get", such as {@link #getEventQueue()} returns<a name="line.41"></a>
-<span class="sourceLineNo">042</span> * a singleton.<a name="line.42"></a>
-<span class="sourceLineNo">043</span> */<a name="line.43"></a>
-<span class="sourceLineNo">044</span>public class Factory {<a name="line.44"></a>
-<span class="sourceLineNo">045</span><a name="line.45"></a>
-<span class="sourceLineNo">046</span>    private static InternalConnection connection;<a name="line.46"></a>
-<span class="sourceLineNo">047</span>    private static ChannelManager channelManager;<a name="line.47"></a>
-<span class="sourceLineNo">048</span>    private static ExecutorService eventQueue;<a name="line.48"></a>
-<span class="sourceLineNo">049</span><a name="line.49"></a>
-<span class="sourceLineNo">050</span>    public static InternalConnection getConnection(String apiKey, boolean encrypted) {<a name="line.50"></a>
-<span class="sourceLineNo">051</span>        if (connection == null) {<a name="line.51"></a>
-<span class="sourceLineNo">052</span>            try {<a name="line.52"></a>
-<span class="sourceLineNo">053</span>                connection = new WebSocketConnection(apiKey, encrypted);<a name="line.53"></a>
-<span class="sourceLineNo">054</span>            } catch (URISyntaxException e) {<a name="line.54"></a>
-<span class="sourceLineNo">055</span>                throw new IllegalArgumentException(<a name="line.55"></a>
-<span class="sourceLineNo">056</span>                        "Failed to initialise connection", e);<a name="line.56"></a>
-<span class="sourceLineNo">057</span>            }<a name="line.57"></a>
-<span class="sourceLineNo">058</span>        }<a name="line.58"></a>
-<span class="sourceLineNo">059</span>        return connection;<a name="line.59"></a>
-<span class="sourceLineNo">060</span>    }<a name="line.60"></a>
-<span class="sourceLineNo">061</span><a name="line.61"></a>
-<span class="sourceLineNo">062</span>    public static WebSocketClient newWebSocketClientWrapper(URI uri,<a name="line.62"></a>
-<span class="sourceLineNo">063</span>            WebSocketListener proxy) throws SSLException {<a name="line.63"></a>
-<span class="sourceLineNo">064</span>        return new WebSocketClientWrapper(uri, proxy);<a name="line.64"></a>
-<span class="sourceLineNo">065</span>    }<a name="line.65"></a>
-<span class="sourceLineNo">066</span><a name="line.66"></a>
-<span class="sourceLineNo">067</span>    public static ExecutorService getEventQueue() {<a name="line.67"></a>
-<span class="sourceLineNo">068</span>        if (eventQueue == null) {<a name="line.68"></a>
-<span class="sourceLineNo">069</span>            eventQueue = Executors.newSingleThreadExecutor();<a name="line.69"></a>
-<span class="sourceLineNo">070</span>        }<a name="line.70"></a>
-<span class="sourceLineNo">071</span>        return eventQueue;<a name="line.71"></a>
-<span class="sourceLineNo">072</span>    }<a name="line.72"></a>
-<span class="sourceLineNo">073</span><a name="line.73"></a>
-<span class="sourceLineNo">074</span>    public static ChannelImpl newPublicChannel(String channelName) {<a name="line.74"></a>
-<span class="sourceLineNo">075</span>        return new ChannelImpl(channelName);<a name="line.75"></a>
-<span class="sourceLineNo">076</span>    }<a name="line.76"></a>
-<span class="sourceLineNo">077</span>    <a name="line.77"></a>
-<span class="sourceLineNo">078</span>    public static PrivateChannelImpl newPrivateChannel(InternalConnection connection, String channelName, Authorizer authorizer) {<a name="line.78"></a>
-<span class="sourceLineNo">079</span>        return new PrivateChannelImpl(connection, channelName, authorizer);<a name="line.79"></a>
-<span class="sourceLineNo">080</span>    }<a name="line.80"></a>
-<span class="sourceLineNo">081</span>    <a name="line.81"></a>
-<span class="sourceLineNo">082</span>    public static PresenceChannelImpl newPresenceChannel(InternalConnection connection, String channelName, Authorizer authorizer) {<a name="line.82"></a>
-<span class="sourceLineNo">083</span>        return new PresenceChannelImpl(connection, channelName, authorizer);<a name="line.83"></a>
-<span class="sourceLineNo">084</span>    }<a name="line.84"></a>
-<span class="sourceLineNo">085</span><a name="line.85"></a>
-<span class="sourceLineNo">086</span>    public static ChannelManager getChannelManager() {<a name="line.86"></a>
-<span class="sourceLineNo">087</span>        if (channelManager == null) {<a name="line.87"></a>
-<span class="sourceLineNo">088</span>            channelManager = new ChannelManager();<a name="line.88"></a>
-<span class="sourceLineNo">089</span>        }<a name="line.89"></a>
-<span class="sourceLineNo">090</span>        return channelManager;<a name="line.90"></a>
-<span class="sourceLineNo">091</span>    }<a name="line.91"></a>
-<span class="sourceLineNo">092</span><a name="line.92"></a>
-<span class="sourceLineNo">093</span>    public static URL newURL(String endPoint) throws MalformedURLException {<a name="line.93"></a>
-<span class="sourceLineNo">094</span>        return new URL(endPoint);<a name="line.94"></a>
-<span class="sourceLineNo">095</span>    }<a name="line.95"></a>
-<span class="sourceLineNo">096</span>}<a name="line.96"></a>
+<HTML>
+<BODY BGCOLOR="white">
+<PRE>
+<FONT color="green">001</FONT>    package com.pusher.client.util;<a name="line.1"></a>
+<FONT color="green">002</FONT>    <a name="line.2"></a>
+<FONT color="green">003</FONT>    import java.net.URI;<a name="line.3"></a>
+<FONT color="green">004</FONT>    import java.net.URISyntaxException;<a name="line.4"></a>
+<FONT color="green">005</FONT>    import java.util.concurrent.Executors;<a name="line.5"></a>
+<FONT color="green">006</FONT>    import java.util.concurrent.ScheduledExecutorService;<a name="line.6"></a>
+<FONT color="green">007</FONT>    <a name="line.7"></a>
+<FONT color="green">008</FONT>    import javax.net.ssl.SSLException;<a name="line.8"></a>
+<FONT color="green">009</FONT>    <a name="line.9"></a>
+<FONT color="green">010</FONT>    import org.java_websocket.client.WebSocketClient;<a name="line.10"></a>
+<FONT color="green">011</FONT>    <a name="line.11"></a>
+<FONT color="green">012</FONT>    import com.pusher.client.Authorizer;<a name="line.12"></a>
+<FONT color="green">013</FONT>    import com.pusher.client.PusherOptions;<a name="line.13"></a>
+<FONT color="green">014</FONT>    import com.pusher.client.channel.impl.ChannelImpl;<a name="line.14"></a>
+<FONT color="green">015</FONT>    import com.pusher.client.channel.impl.ChannelManager;<a name="line.15"></a>
+<FONT color="green">016</FONT>    import com.pusher.client.channel.impl.PresenceChannelImpl;<a name="line.16"></a>
+<FONT color="green">017</FONT>    import com.pusher.client.channel.impl.PrivateChannelImpl;<a name="line.17"></a>
+<FONT color="green">018</FONT>    import com.pusher.client.connection.impl.InternalConnection;<a name="line.18"></a>
+<FONT color="green">019</FONT>    import com.pusher.client.connection.websocket.WebSocketClientWrapper;<a name="line.19"></a>
+<FONT color="green">020</FONT>    import com.pusher.client.connection.websocket.WebSocketConnection;<a name="line.20"></a>
+<FONT color="green">021</FONT>    import com.pusher.client.connection.websocket.WebSocketListener;<a name="line.21"></a>
+<FONT color="green">022</FONT>    <a name="line.22"></a>
+<FONT color="green">023</FONT>    /**<a name="line.23"></a>
+<FONT color="green">024</FONT>     * This is a lightweight way of doing dependency injection and enabling classes<a name="line.24"></a>
+<FONT color="green">025</FONT>     * to be unit tested in isolation. No class in this library instantiates another<a name="line.25"></a>
+<FONT color="green">026</FONT>     * class directly, otherwise they would be tightly coupled. Instead, they all<a name="line.26"></a>
+<FONT color="green">027</FONT>     * call the factory methods in this class when they want to create instances of<a name="line.27"></a>
+<FONT color="green">028</FONT>     * another class.<a name="line.28"></a>
+<FONT color="green">029</FONT>     *<a name="line.29"></a>
+<FONT color="green">030</FONT>     * An instance of Factory is provided on construction to each class which may<a name="line.30"></a>
+<FONT color="green">031</FONT>     * require it, the initial factory is instantiated in the Pusher constructor,<a name="line.31"></a>
+<FONT color="green">032</FONT>     * the only constructor which a library consumer should need to call directly.<a name="line.32"></a>
+<FONT color="green">033</FONT>     *<a name="line.33"></a>
+<FONT color="green">034</FONT>     * Conventions:<a name="line.34"></a>
+<FONT color="green">035</FONT>     *<a name="line.35"></a>
+<FONT color="green">036</FONT>     * - any method that starts with "new", such as<a name="line.36"></a>
+<FONT color="green">037</FONT>     * {@link #newPublicChannel(String)} creates a new instance of that class every<a name="line.37"></a>
+<FONT color="green">038</FONT>     * time it is called.<a name="line.38"></a>
+<FONT color="green">039</FONT>     *<a name="line.39"></a>
+<FONT color="green">040</FONT>     * - any method that starts with "get", such as {@link #getEventQueue()} returns<a name="line.40"></a>
+<FONT color="green">041</FONT>     * a singleton.<a name="line.41"></a>
+<FONT color="green">042</FONT>     */<a name="line.42"></a>
+<FONT color="green">043</FONT>    public class Factory {<a name="line.43"></a>
+<FONT color="green">044</FONT>    <a name="line.44"></a>
+<FONT color="green">045</FONT>        private InternalConnection connection;<a name="line.45"></a>
+<FONT color="green">046</FONT>        private ChannelManager channelManager;<a name="line.46"></a>
+<FONT color="green">047</FONT>        private ScheduledExecutorService eventQueue;<a name="line.47"></a>
+<FONT color="green">048</FONT>    <a name="line.48"></a>
+<FONT color="green">049</FONT>        public InternalConnection getConnection(String apiKey, PusherOptions options) {<a name="line.49"></a>
+<FONT color="green">050</FONT>            if (connection == null) {<a name="line.50"></a>
+<FONT color="green">051</FONT>                try {<a name="line.51"></a>
+<FONT color="green">052</FONT>                    connection = new WebSocketConnection(options.buildUrl(apiKey),<a name="line.52"></a>
+<FONT color="green">053</FONT>                                                         options.getActivityTimeout(),<a name="line.53"></a>
+<FONT color="green">054</FONT>                                                         options.getPongTimeout(),<a name="line.54"></a>
+<FONT color="green">055</FONT>                                                         this);<a name="line.55"></a>
+<FONT color="green">056</FONT>                } catch (URISyntaxException e) {<a name="line.56"></a>
+<FONT color="green">057</FONT>                    throw new IllegalArgumentException("Failed to initialise connection", e);<a name="line.57"></a>
+<FONT color="green">058</FONT>                }<a name="line.58"></a>
+<FONT color="green">059</FONT>            }<a name="line.59"></a>
+<FONT color="green">060</FONT>            return connection;<a name="line.60"></a>
+<FONT color="green">061</FONT>        }<a name="line.61"></a>
+<FONT color="green">062</FONT>    <a name="line.62"></a>
+<FONT color="green">063</FONT>        public WebSocketClient newWebSocketClientWrapper(URI uri, WebSocketListener proxy) throws SSLException {<a name="line.63"></a>
+<FONT color="green">064</FONT>            return new WebSocketClientWrapper(uri, proxy);<a name="line.64"></a>
+<FONT color="green">065</FONT>        }<a name="line.65"></a>
+<FONT color="green">066</FONT>    <a name="line.66"></a>
+<FONT color="green">067</FONT>        public ScheduledExecutorService getEventQueue() {<a name="line.67"></a>
+<FONT color="green">068</FONT>            if (eventQueue == null) {<a name="line.68"></a>
+<FONT color="green">069</FONT>                eventQueue = Executors.newSingleThreadScheduledExecutor();<a name="line.69"></a>
+<FONT color="green">070</FONT>            }<a name="line.70"></a>
+<FONT color="green">071</FONT>            return eventQueue;<a name="line.71"></a>
+<FONT color="green">072</FONT>        }<a name="line.72"></a>
+<FONT color="green">073</FONT>    <a name="line.73"></a>
+<FONT color="green">074</FONT>        public ChannelImpl newPublicChannel(String channelName) {<a name="line.74"></a>
+<FONT color="green">075</FONT>            return new ChannelImpl(channelName, this);<a name="line.75"></a>
+<FONT color="green">076</FONT>        }<a name="line.76"></a>
+<FONT color="green">077</FONT>    <a name="line.77"></a>
+<FONT color="green">078</FONT>        public PrivateChannelImpl newPrivateChannel(InternalConnection connection, String channelName, Authorizer authorizer) {<a name="line.78"></a>
+<FONT color="green">079</FONT>            return new PrivateChannelImpl(connection, channelName, authorizer, this);<a name="line.79"></a>
+<FONT color="green">080</FONT>        }<a name="line.80"></a>
+<FONT color="green">081</FONT>    <a name="line.81"></a>
+<FONT color="green">082</FONT>        public PresenceChannelImpl newPresenceChannel(InternalConnection connection, String channelName,<a name="line.82"></a>
+<FONT color="green">083</FONT>                Authorizer authorizer) {<a name="line.83"></a>
+<FONT color="green">084</FONT>            return new PresenceChannelImpl(connection, channelName, authorizer, this);<a name="line.84"></a>
+<FONT color="green">085</FONT>        }<a name="line.85"></a>
+<FONT color="green">086</FONT>    <a name="line.86"></a>
+<FONT color="green">087</FONT>        public ChannelManager getChannelManager() {<a name="line.87"></a>
+<FONT color="green">088</FONT>            if (channelManager == null) {<a name="line.88"></a>
+<FONT color="green">089</FONT>                channelManager = new ChannelManager(this);<a name="line.89"></a>
+<FONT color="green">090</FONT>            }<a name="line.90"></a>
+<FONT color="green">091</FONT>            return channelManager;<a name="line.91"></a>
+<FONT color="green">092</FONT>        }<a name="line.92"></a>
+<FONT color="green">093</FONT>    <a name="line.93"></a>
+<FONT color="green">094</FONT>        public long timeNow() {<a name="line.94"></a>
+<FONT color="green">095</FONT>            return System.currentTimeMillis();<a name="line.95"></a>
+<FONT color="green">096</FONT>        }<a name="line.96"></a>
+<FONT color="green">097</FONT>    }<a name="line.97"></a>
 
 
 
@@ -162,7 +158,6 @@
 
 
 
-</pre>
-</div>
-</body>
-</html>
+</PRE>
+</BODY>
+</HTML>

@@ -1,56 +1,51 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html lang="en">
-<head>
-<title>Source code</title>
-<link rel="stylesheet" type="text/css" href="../../../../../styles.css" title="Style">
-</head>
-<body>
-<div class="sourceContainer">
-<pre><span class="sourceLineNo">001</span>package com.pusher.client.connection;<a name="line.1"></a>
-<span class="sourceLineNo">002</span><a name="line.2"></a>
-<span class="sourceLineNo">003</span>/**<a name="line.3"></a>
-<span class="sourceLineNo">004</span> * &lt;p&gt;Client applications should implement this interface if they wish to receive notifications when the state of a<a name="line.4"></a>
-<span class="sourceLineNo">005</span> * {@link Connection} changes or an error is thrown.&lt;/p&gt;<a name="line.5"></a>
-<span class="sourceLineNo">006</span> * <a name="line.6"></a>
-<span class="sourceLineNo">007</span> * &lt;p&gt;Implementations of this interface can be bound to the connection by calling {@link Connection#bind(ConnectionState, ConnectionEventListener)}. <a name="line.7"></a>
-<span class="sourceLineNo">008</span> * The connection itself can be retrieved from the {@link com.pusher.client.Pusher} object by calling <a name="line.8"></a>
-<span class="sourceLineNo">009</span> * {@link com.pusher.client.Pusher#getConnection()}.&lt;/p&gt;<a name="line.9"></a>
-<span class="sourceLineNo">010</span> * <a name="line.10"></a>
-<span class="sourceLineNo">011</span> * &lt;p&gt;Alternatively, you can bind your implementation of the interface and connect at the same time by calling <a name="line.11"></a>
-<span class="sourceLineNo">012</span> * {@link com.pusher.client.Pusher#connect(ConnectionEventListener, ConnectionState...)}.&lt;/p&gt;<a name="line.12"></a>
-<span class="sourceLineNo">013</span> */<a name="line.13"></a>
-<span class="sourceLineNo">014</span>public interface ConnectionEventListener {<a name="line.14"></a>
-<span class="sourceLineNo">015</span><a name="line.15"></a>
-<span class="sourceLineNo">016</span>    /**<a name="line.16"></a>
-<span class="sourceLineNo">017</span>     * &lt;p&gt;Callback that is fired whenever the {@link ConnectionState} of the {@link Connection} changes. The state <a name="line.17"></a>
-<span class="sourceLineNo">018</span>     * typically changes during connection to Pusher and during disconnection and reconnection.&lt;/p&gt;<a name="line.18"></a>
-<span class="sourceLineNo">019</span>     * <a name="line.19"></a>
-<span class="sourceLineNo">020</span>     * &lt;p&gt;This callback is only fired if the {@linkplain ConnectionEventListener} has been bound to the new state by<a name="line.20"></a>
-<span class="sourceLineNo">021</span>     * calling {@link Connection#bind(ConnectionState, ConnectionEventListener)} with either the new state or<a name="line.21"></a>
-<span class="sourceLineNo">022</span>     * {@link ConnectionState#ALL}.&lt;/p&gt;<a name="line.22"></a>
-<span class="sourceLineNo">023</span>     * @param change An object that contains the previous state of the connection and the new state. The new state<a name="line.23"></a>
-<span class="sourceLineNo">024</span>     * can be retrieved by calling {@link ConnectionStateChange#getCurrentState()}.<a name="line.24"></a>
-<span class="sourceLineNo">025</span>     */<a name="line.25"></a>
-<span class="sourceLineNo">026</span>    void onConnectionStateChange(ConnectionStateChange change);<a name="line.26"></a>
-<span class="sourceLineNo">027</span><a name="line.27"></a>
-<span class="sourceLineNo">028</span>    /**<a name="line.28"></a>
-<span class="sourceLineNo">029</span>     * &lt;p&gt;Callback that indicates either:<a name="line.29"></a>
-<span class="sourceLineNo">030</span>     * <a name="line.30"></a>
-<span class="sourceLineNo">031</span>     * &lt;ul&gt;<a name="line.31"></a>
-<span class="sourceLineNo">032</span>     *  &lt;li&gt;An error message has been received from Pusher, or&lt;/li&gt;<a name="line.32"></a>
-<span class="sourceLineNo">033</span>     *  &lt;li&gt;An error has occurred in the client library.&lt;/li&gt;<a name="line.33"></a>
-<span class="sourceLineNo">034</span>     * &lt;/ul&gt;&lt;/p&gt;<a name="line.34"></a>
-<span class="sourceLineNo">035</span>     * <a name="line.35"></a>
-<span class="sourceLineNo">036</span>     * &lt;p&gt;All {@linkplain ConnectionEventListener}s that have been registered by calling {@link Connection#bind(ConnectionState, ConnectionEventListener)} <a name="line.36"></a>
-<span class="sourceLineNo">037</span>     * will receive this callback, even if the {@linkplain ConnectionEventListener} is only bound to specific <a name="line.37"></a>
-<span class="sourceLineNo">038</span>     * connection status changes.&lt;/p&gt;<a name="line.38"></a>
-<span class="sourceLineNo">039</span>     * <a name="line.39"></a>
-<span class="sourceLineNo">040</span>     * @param message A message indicating the cause of the error.<a name="line.40"></a>
-<span class="sourceLineNo">041</span>     * @param code The error code for the message. Can be null.<a name="line.41"></a>
-<span class="sourceLineNo">042</span>     * @param e The exception that was thrown, if any. Can be null.<a name="line.42"></a>
-<span class="sourceLineNo">043</span>     */<a name="line.43"></a>
-<span class="sourceLineNo">044</span>    void onError(String message, String code, Exception e);<a name="line.44"></a>
-<span class="sourceLineNo">045</span>}<a name="line.45"></a>
+<HTML>
+<BODY BGCOLOR="white">
+<PRE>
+<FONT color="green">001</FONT>    package com.pusher.client.connection;<a name="line.1"></a>
+<FONT color="green">002</FONT>    <a name="line.2"></a>
+<FONT color="green">003</FONT>    /**<a name="line.3"></a>
+<FONT color="green">004</FONT>     * &lt;p&gt;Client applications should implement this interface if they wish to receive notifications when the state of a<a name="line.4"></a>
+<FONT color="green">005</FONT>     * {@link Connection} changes or an error is thrown.&lt;/p&gt;<a name="line.5"></a>
+<FONT color="green">006</FONT>     * <a name="line.6"></a>
+<FONT color="green">007</FONT>     * &lt;p&gt;Implementations of this interface can be bound to the connection by calling {@link Connection#bind(ConnectionState, ConnectionEventListener)}. <a name="line.7"></a>
+<FONT color="green">008</FONT>     * The connection itself can be retrieved from the {@link com.pusher.client.Pusher} object by calling <a name="line.8"></a>
+<FONT color="green">009</FONT>     * {@link com.pusher.client.Pusher#getConnection()}.&lt;/p&gt;<a name="line.9"></a>
+<FONT color="green">010</FONT>     * <a name="line.10"></a>
+<FONT color="green">011</FONT>     * &lt;p&gt;Alternatively, you can bind your implementation of the interface and connect at the same time by calling <a name="line.11"></a>
+<FONT color="green">012</FONT>     * {@link com.pusher.client.Pusher#connect(ConnectionEventListener, ConnectionState...)}.&lt;/p&gt;<a name="line.12"></a>
+<FONT color="green">013</FONT>     */<a name="line.13"></a>
+<FONT color="green">014</FONT>    public interface ConnectionEventListener {<a name="line.14"></a>
+<FONT color="green">015</FONT>    <a name="line.15"></a>
+<FONT color="green">016</FONT>        /**<a name="line.16"></a>
+<FONT color="green">017</FONT>         * &lt;p&gt;Callback that is fired whenever the {@link ConnectionState} of the {@link Connection} changes. The state <a name="line.17"></a>
+<FONT color="green">018</FONT>         * typically changes during connection to Pusher and during disconnection and reconnection.&lt;/p&gt;<a name="line.18"></a>
+<FONT color="green">019</FONT>         * <a name="line.19"></a>
+<FONT color="green">020</FONT>         * &lt;p&gt;This callback is only fired if the {@linkplain ConnectionEventListener} has been bound to the new state by<a name="line.20"></a>
+<FONT color="green">021</FONT>         * calling {@link Connection#bind(ConnectionState, ConnectionEventListener)} with either the new state or<a name="line.21"></a>
+<FONT color="green">022</FONT>         * {@link ConnectionState#ALL}.&lt;/p&gt;<a name="line.22"></a>
+<FONT color="green">023</FONT>         * @param change An object that contains the previous state of the connection and the new state. The new state<a name="line.23"></a>
+<FONT color="green">024</FONT>         * can be retrieved by calling {@link ConnectionStateChange#getCurrentState()}.<a name="line.24"></a>
+<FONT color="green">025</FONT>         */<a name="line.25"></a>
+<FONT color="green">026</FONT>        void onConnectionStateChange(ConnectionStateChange change);<a name="line.26"></a>
+<FONT color="green">027</FONT>    <a name="line.27"></a>
+<FONT color="green">028</FONT>        /**<a name="line.28"></a>
+<FONT color="green">029</FONT>         * &lt;p&gt;Callback that indicates either:<a name="line.29"></a>
+<FONT color="green">030</FONT>         * <a name="line.30"></a>
+<FONT color="green">031</FONT>         * &lt;ul&gt;<a name="line.31"></a>
+<FONT color="green">032</FONT>         *  &lt;li&gt;An error message has been received from Pusher, or&lt;/li&gt;<a name="line.32"></a>
+<FONT color="green">033</FONT>         *  &lt;li&gt;An error has occurred in the client library.&lt;/li&gt;<a name="line.33"></a>
+<FONT color="green">034</FONT>         * &lt;/ul&gt;&lt;/p&gt;<a name="line.34"></a>
+<FONT color="green">035</FONT>         * <a name="line.35"></a>
+<FONT color="green">036</FONT>         * &lt;p&gt;All {@linkplain ConnectionEventListener}s that have been registered by calling {@link Connection#bind(ConnectionState, ConnectionEventListener)} <a name="line.36"></a>
+<FONT color="green">037</FONT>         * will receive this callback, even if the {@linkplain ConnectionEventListener} is only bound to specific <a name="line.37"></a>
+<FONT color="green">038</FONT>         * connection status changes.&lt;/p&gt;<a name="line.38"></a>
+<FONT color="green">039</FONT>         * <a name="line.39"></a>
+<FONT color="green">040</FONT>         * @param message A message indicating the cause of the error.<a name="line.40"></a>
+<FONT color="green">041</FONT>         * @param code The error code for the message. Can be null.<a name="line.41"></a>
+<FONT color="green">042</FONT>         * @param e The exception that was thrown, if any. Can be null.<a name="line.42"></a>
+<FONT color="green">043</FONT>         */<a name="line.43"></a>
+<FONT color="green">044</FONT>        void onError(String message, String code, Exception e);<a name="line.44"></a>
+<FONT color="green">045</FONT>    }<a name="line.45"></a>
 
 
 
@@ -111,7 +106,6 @@
 
 
 
-</pre>
-</div>
-</body>
-</html>
+</PRE>
+</BODY>
+</HTML>
