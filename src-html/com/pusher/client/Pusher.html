@@ -157,120 +157,124 @@
 <FONT color="green">154</FONT>        /**<a name="line.154"></a>
 <FONT color="green">155</FONT>         * Subscribes to a public {@link Channel}.<a name="line.155"></a>
 <FONT color="green">156</FONT>         *<a name="line.156"></a>
-<FONT color="green">157</FONT>         * @param channelName The name of the {@link Channel} to subscribe to.<a name="line.157"></a>
-<FONT color="green">158</FONT>         * @return The {@link Channel} object representing your subscription.<a name="line.158"></a>
-<FONT color="green">159</FONT>         */<a name="line.159"></a>
-<FONT color="green">160</FONT>        public Channel subscribe(String channelName) {<a name="line.160"></a>
-<FONT color="green">161</FONT>            return subscribe(channelName, null);<a name="line.161"></a>
-<FONT color="green">162</FONT>        }<a name="line.162"></a>
-<FONT color="green">163</FONT>    <a name="line.163"></a>
-<FONT color="green">164</FONT>        /**<a name="line.164"></a>
-<FONT color="green">165</FONT>         * Binds a {@link ChannelEventListener} to the specified events and then subscribes to a public {@link Channel}.<a name="line.165"></a>
-<FONT color="green">166</FONT>         *<a name="line.166"></a>
-<FONT color="green">167</FONT>         * @param channelName The name of the {@link Channel} to subscribe to.<a name="line.167"></a>
-<FONT color="green">168</FONT>         * @param listener A {@link ChannelEventListener} to receive events. This can be null if you don't want to bind a listener at subscription time, in which case you should call {@link #subscribe(String)} instead of this method.<a name="line.168"></a>
-<FONT color="green">169</FONT>         * @param eventNames An optional list of event names to bind your {@link ChannelEventListener} to before subscribing.<a name="line.169"></a>
-<FONT color="green">170</FONT>         * @return The {@link Channel} object representing your subscription.<a name="line.170"></a>
-<FONT color="green">171</FONT>         * @throws IllegalArgumentException If any of the following are true:<a name="line.171"></a>
-<FONT color="green">172</FONT>         *             &lt;ul&gt;<a name="line.172"></a>
-<FONT color="green">173</FONT>         *             &lt;li&gt;The channel name is null.&lt;/li&gt;<a name="line.173"></a>
-<FONT color="green">174</FONT>         *             &lt;li&gt;You are already subscribed to this channel.&lt;/li&gt;<a name="line.174"></a>
-<FONT color="green">175</FONT>         *             &lt;li&gt;The channel name starts with "private-". If you want to subscribe to a private channel, call {@link #subscribePrivate(String, PrivateChannelEventListener, String...)} instead of this method.&lt;/li&gt;<a name="line.175"></a>
-<FONT color="green">176</FONT>         *             &lt;li&gt;At least one of the specified event names is null.&lt;/li&gt;<a name="line.176"></a>
-<FONT color="green">177</FONT>         *             &lt;li&gt;You have specified at least one event name and your {@link ChannelEventListener} is null.&lt;/li&gt;<a name="line.177"></a>
-<FONT color="green">178</FONT>         *             &lt;/ul&gt;<a name="line.178"></a>
-<FONT color="green">179</FONT>         */<a name="line.179"></a>
-<FONT color="green">180</FONT>        public Channel subscribe(String channelName, ChannelEventListener listener, String... eventNames) {<a name="line.180"></a>
-<FONT color="green">181</FONT>    <a name="line.181"></a>
-<FONT color="green">182</FONT>            InternalChannel channel = factory.newPublicChannel(channelName);<a name="line.182"></a>
-<FONT color="green">183</FONT>            channelManager.subscribeTo(channel, listener, eventNames);<a name="line.183"></a>
-<FONT color="green">184</FONT>    <a name="line.184"></a>
-<FONT color="green">185</FONT>            return channel;<a name="line.185"></a>
-<FONT color="green">186</FONT>        }<a name="line.186"></a>
-<FONT color="green">187</FONT>    <a name="line.187"></a>
-<FONT color="green">188</FONT>        /**<a name="line.188"></a>
-<FONT color="green">189</FONT>         * Subscribes to a {@link com.pusher.client.channel.PrivateChannel} which requires authentication.<a name="line.189"></a>
-<FONT color="green">190</FONT>         *<a name="line.190"></a>
-<FONT color="green">191</FONT>         * @param channelName The name of the channel to subscribe to.<a name="line.191"></a>
-<FONT color="green">192</FONT>         * @return A new {@link com.pusher.client.channel.PrivateChannel} representing the subscription.<a name="line.192"></a>
-<FONT color="green">193</FONT>         * @throws IllegalStateException if a {@link com.pusher.client.Authorizer} has not been set for the {@link Pusher} instance via {@link #Pusher(String, PusherOptions)}.<a name="line.193"></a>
-<FONT color="green">194</FONT>         */<a name="line.194"></a>
-<FONT color="green">195</FONT>        public PrivateChannel subscribePrivate(String channelName) {<a name="line.195"></a>
-<FONT color="green">196</FONT>            return subscribePrivate(channelName, null);<a name="line.196"></a>
-<FONT color="green">197</FONT>        }<a name="line.197"></a>
-<FONT color="green">198</FONT>    <a name="line.198"></a>
-<FONT color="green">199</FONT>        /**<a name="line.199"></a>
-<FONT color="green">200</FONT>         * Subscribes to a {@link com.pusher.client.channel.PrivateChannel} which requires authentication.<a name="line.200"></a>
-<FONT color="green">201</FONT>         *<a name="line.201"></a>
-<FONT color="green">202</FONT>         * @param channelName The name of the channel to subscribe to.<a name="line.202"></a>
-<FONT color="green">203</FONT>         * @param listener A listener to be informed of both Pusher channel protocol events and subscription data events.<a name="line.203"></a>
-<FONT color="green">204</FONT>         * @param eventNames An optional list of names of events to be bound to on the channel. The equivalent of calling {@link com.pusher.client.channel.Channel.bind(String, SubscriptionListener)} on or more times.<a name="line.204"></a>
-<FONT color="green">205</FONT>         * @return A new {@link com.pusher.client.channel.PrivateChannel} representing the subscription.<a name="line.205"></a>
-<FONT color="green">206</FONT>         * @throws IllegalStateException if a {@link com.pusher.client.Authorizer} has not been set for the {@link Pusher} instance via {@link #Pusher(String, PusherOptions)}.<a name="line.206"></a>
-<FONT color="green">207</FONT>         */<a name="line.207"></a>
-<FONT color="green">208</FONT>        public PrivateChannel subscribePrivate(String channelName, PrivateChannelEventListener listener, String... eventNames) {<a name="line.208"></a>
-<FONT color="green">209</FONT>    <a name="line.209"></a>
-<FONT color="green">210</FONT>            throwExceptionIfNoAuthorizerHasBeenSet();<a name="line.210"></a>
-<FONT color="green">211</FONT>    <a name="line.211"></a>
-<FONT color="green">212</FONT>            PrivateChannelImpl channel = factory.newPrivateChannel(connection, channelName, pusherOptions.getAuthorizer());<a name="line.212"></a>
-<FONT color="green">213</FONT>            channelManager.subscribeTo(channel, listener, eventNames);<a name="line.213"></a>
-<FONT color="green">214</FONT>    <a name="line.214"></a>
-<FONT color="green">215</FONT>            return channel;<a name="line.215"></a>
-<FONT color="green">216</FONT>        }<a name="line.216"></a>
-<FONT color="green">217</FONT>    <a name="line.217"></a>
-<FONT color="green">218</FONT>        /**<a name="line.218"></a>
-<FONT color="green">219</FONT>         * Subscribes to a {@link com.pusher.client.channel.PresenceChannel} which requires authentication.<a name="line.219"></a>
-<FONT color="green">220</FONT>         *<a name="line.220"></a>
-<FONT color="green">221</FONT>         * @param channelName The name of the channel to subscribe to.<a name="line.221"></a>
-<FONT color="green">222</FONT>         * @return A new {@link com.pusher.client.channel.PresenceChannel} representing the subscription.<a name="line.222"></a>
-<FONT color="green">223</FONT>         * @throws IllegalStateException if a {@link com.pusher.client.Authorizer} has not been set for the {@link Pusher} instance via {@link #Pusher(String, PusherOptions)}.<a name="line.223"></a>
-<FONT color="green">224</FONT>         */<a name="line.224"></a>
-<FONT color="green">225</FONT>        public PresenceChannel subscribePresence(String channelName) {<a name="line.225"></a>
-<FONT color="green">226</FONT>            return subscribePresence(channelName, null);<a name="line.226"></a>
-<FONT color="green">227</FONT>        }<a name="line.227"></a>
-<FONT color="green">228</FONT>    <a name="line.228"></a>
-<FONT color="green">229</FONT>        /**<a name="line.229"></a>
-<FONT color="green">230</FONT>         * Subscribes to a {@link com.pusher.client.channel.PresenceChannel} which requires authentication.<a name="line.230"></a>
-<FONT color="green">231</FONT>         *<a name="line.231"></a>
-<FONT color="green">232</FONT>         * @param channelName The name of the channel to subscribe to.<a name="line.232"></a>
-<FONT color="green">233</FONT>         * @param listener A listener to be informed of Pusher channel protocol, including presence-specific events, and subscription data events.<a name="line.233"></a>
-<FONT color="green">234</FONT>         * @param eventNames An optional list of names of events to be bound to on the channel. The equivalent of calling {@link com.pusher.client.channel.Channel.bind(String, SubscriptionListener)} on or more times.<a name="line.234"></a>
-<FONT color="green">235</FONT>         * @return A new {@link com.pusher.client.channel.PresenceChannel} representing the subscription.<a name="line.235"></a>
-<FONT color="green">236</FONT>         * @throws IllegalStateException if a {@link com.pusher.client.Authorizer} has not been set for the {@link Pusher} instance via {@link #Pusher(String, PusherOptions)}.<a name="line.236"></a>
-<FONT color="green">237</FONT>         */<a name="line.237"></a>
-<FONT color="green">238</FONT>        public PresenceChannel subscribePresence(String channelName, PresenceChannelEventListener listener, String... eventNames) {<a name="line.238"></a>
-<FONT color="green">239</FONT>    <a name="line.239"></a>
-<FONT color="green">240</FONT>            throwExceptionIfNoAuthorizerHasBeenSet();<a name="line.240"></a>
-<FONT color="green">241</FONT>    <a name="line.241"></a>
-<FONT color="green">242</FONT>            PresenceChannelImpl channel = factory.newPresenceChannel(connection, channelName, pusherOptions.getAuthorizer());<a name="line.242"></a>
-<FONT color="green">243</FONT>            channelManager.subscribeTo(channel, listener, eventNames);<a name="line.243"></a>
-<FONT color="green">244</FONT>    <a name="line.244"></a>
-<FONT color="green">245</FONT>            return channel;<a name="line.245"></a>
-<FONT color="green">246</FONT>        }<a name="line.246"></a>
-<FONT color="green">247</FONT>    <a name="line.247"></a>
-<FONT color="green">248</FONT>        /**<a name="line.248"></a>
-<FONT color="green">249</FONT>         * Unsubscribes from a channel using via the name of the channel.<a name="line.249"></a>
-<FONT color="green">250</FONT>         * @param channelName the name of the channel to be unsubscribed from.<a name="line.250"></a>
-<FONT color="green">251</FONT>         *<a name="line.251"></a>
-<FONT color="green">252</FONT>         * @throws IllegalStateException if {@link Pusher.getConnection().getState()} is not {@link com.pusher.client.connection.ConnectionState.CONNECTED CONNECTED}<a name="line.252"></a>
-<FONT color="green">253</FONT>         */<a name="line.253"></a>
-<FONT color="green">254</FONT>        public void unsubscribe(String channelName) {<a name="line.254"></a>
-<FONT color="green">255</FONT>    <a name="line.255"></a>
-<FONT color="green">256</FONT>            if (connection.getState() != ConnectionState.CONNECTED) {<a name="line.256"></a>
-<FONT color="green">257</FONT>                throw new IllegalStateException("Cannot unsubscribe from channel " + channelName + " while not connected");<a name="line.257"></a>
-<FONT color="green">258</FONT>            }<a name="line.258"></a>
+<FONT color="green">157</FONT>         * Note that subscriptions should be registered only once with a Pusher instance.<a name="line.157"></a>
+<FONT color="green">158</FONT>         * Subscriptions are persisted over disconnection and re-registered with the server automatically on reconnection.<a name="line.158"></a>
+<FONT color="green">159</FONT>         * This means that subscriptions may also be registered before connect() is called, they will be initiated on connection.<a name="line.159"></a>
+<FONT color="green">160</FONT>         *<a name="line.160"></a>
+<FONT color="green">161</FONT>         * @param channelName The name of the {@link Channel} to subscribe to.<a name="line.161"></a>
+<FONT color="green">162</FONT>         * @return The {@link Channel} object representing your subscription.<a name="line.162"></a>
+<FONT color="green">163</FONT>         */<a name="line.163"></a>
+<FONT color="green">164</FONT>        public Channel subscribe(String channelName) {<a name="line.164"></a>
+<FONT color="green">165</FONT>            return subscribe(channelName, null);<a name="line.165"></a>
+<FONT color="green">166</FONT>        }<a name="line.166"></a>
+<FONT color="green">167</FONT>    <a name="line.167"></a>
+<FONT color="green">168</FONT>        /**<a name="line.168"></a>
+<FONT color="green">169</FONT>         * Binds a {@link ChannelEventListener} to the specified events and then subscribes to a public {@link Channel}.<a name="line.169"></a>
+<FONT color="green">170</FONT>         *<a name="line.170"></a>
+<FONT color="green">171</FONT>         * @param channelName The name of the {@link Channel} to subscribe to.<a name="line.171"></a>
+<FONT color="green">172</FONT>         * @param listener A {@link ChannelEventListener} to receive events. This can be null if you don't want to bind a listener at subscription time, in which case you should call {@link #subscribe(String)} instead of this method.<a name="line.172"></a>
+<FONT color="green">173</FONT>         * @param eventNames An optional list of event names to bind your {@link ChannelEventListener} to before subscribing.<a name="line.173"></a>
+<FONT color="green">174</FONT>         * @return The {@link Channel} object representing your subscription.<a name="line.174"></a>
+<FONT color="green">175</FONT>         * @throws IllegalArgumentException If any of the following are true:<a name="line.175"></a>
+<FONT color="green">176</FONT>         *             &lt;ul&gt;<a name="line.176"></a>
+<FONT color="green">177</FONT>         *             &lt;li&gt;The channel name is null.&lt;/li&gt;<a name="line.177"></a>
+<FONT color="green">178</FONT>         *             &lt;li&gt;You are already subscribed to this channel.&lt;/li&gt;<a name="line.178"></a>
+<FONT color="green">179</FONT>         *             &lt;li&gt;The channel name starts with "private-". If you want to subscribe to a private channel, call {@link #subscribePrivate(String, PrivateChannelEventListener, String...)} instead of this method.&lt;/li&gt;<a name="line.179"></a>
+<FONT color="green">180</FONT>         *             &lt;li&gt;At least one of the specified event names is null.&lt;/li&gt;<a name="line.180"></a>
+<FONT color="green">181</FONT>         *             &lt;li&gt;You have specified at least one event name and your {@link ChannelEventListener} is null.&lt;/li&gt;<a name="line.181"></a>
+<FONT color="green">182</FONT>         *             &lt;/ul&gt;<a name="line.182"></a>
+<FONT color="green">183</FONT>         */<a name="line.183"></a>
+<FONT color="green">184</FONT>        public Channel subscribe(String channelName, ChannelEventListener listener, String... eventNames) {<a name="line.184"></a>
+<FONT color="green">185</FONT>    <a name="line.185"></a>
+<FONT color="green">186</FONT>            InternalChannel channel = factory.newPublicChannel(channelName);<a name="line.186"></a>
+<FONT color="green">187</FONT>            channelManager.subscribeTo(channel, listener, eventNames);<a name="line.187"></a>
+<FONT color="green">188</FONT>    <a name="line.188"></a>
+<FONT color="green">189</FONT>            return channel;<a name="line.189"></a>
+<FONT color="green">190</FONT>        }<a name="line.190"></a>
+<FONT color="green">191</FONT>    <a name="line.191"></a>
+<FONT color="green">192</FONT>        /**<a name="line.192"></a>
+<FONT color="green">193</FONT>         * Subscribes to a {@link com.pusher.client.channel.PrivateChannel} which requires authentication.<a name="line.193"></a>
+<FONT color="green">194</FONT>         *<a name="line.194"></a>
+<FONT color="green">195</FONT>         * @param channelName The name of the channel to subscribe to.<a name="line.195"></a>
+<FONT color="green">196</FONT>         * @return A new {@link com.pusher.client.channel.PrivateChannel} representing the subscription.<a name="line.196"></a>
+<FONT color="green">197</FONT>         * @throws IllegalStateException if a {@link com.pusher.client.Authorizer} has not been set for the {@link Pusher} instance via {@link #Pusher(String, PusherOptions)}.<a name="line.197"></a>
+<FONT color="green">198</FONT>         */<a name="line.198"></a>
+<FONT color="green">199</FONT>        public PrivateChannel subscribePrivate(String channelName) {<a name="line.199"></a>
+<FONT color="green">200</FONT>            return subscribePrivate(channelName, null);<a name="line.200"></a>
+<FONT color="green">201</FONT>        }<a name="line.201"></a>
+<FONT color="green">202</FONT>    <a name="line.202"></a>
+<FONT color="green">203</FONT>        /**<a name="line.203"></a>
+<FONT color="green">204</FONT>         * Subscribes to a {@link com.pusher.client.channel.PrivateChannel} which requires authentication.<a name="line.204"></a>
+<FONT color="green">205</FONT>         *<a name="line.205"></a>
+<FONT color="green">206</FONT>         * @param channelName The name of the channel to subscribe to.<a name="line.206"></a>
+<FONT color="green">207</FONT>         * @param listener A listener to be informed of both Pusher channel protocol events and subscription data events.<a name="line.207"></a>
+<FONT color="green">208</FONT>         * @param eventNames An optional list of names of events to be bound to on the channel. The equivalent of calling {@link com.pusher.client.channel.Channel.bind(String, SubscriptionListener)} on or more times.<a name="line.208"></a>
+<FONT color="green">209</FONT>         * @return A new {@link com.pusher.client.channel.PrivateChannel} representing the subscription.<a name="line.209"></a>
+<FONT color="green">210</FONT>         * @throws IllegalStateException if a {@link com.pusher.client.Authorizer} has not been set for the {@link Pusher} instance via {@link #Pusher(String, PusherOptions)}.<a name="line.210"></a>
+<FONT color="green">211</FONT>         */<a name="line.211"></a>
+<FONT color="green">212</FONT>        public PrivateChannel subscribePrivate(String channelName, PrivateChannelEventListener listener, String... eventNames) {<a name="line.212"></a>
+<FONT color="green">213</FONT>    <a name="line.213"></a>
+<FONT color="green">214</FONT>            throwExceptionIfNoAuthorizerHasBeenSet();<a name="line.214"></a>
+<FONT color="green">215</FONT>    <a name="line.215"></a>
+<FONT color="green">216</FONT>            PrivateChannelImpl channel = factory.newPrivateChannel(connection, channelName, pusherOptions.getAuthorizer());<a name="line.216"></a>
+<FONT color="green">217</FONT>            channelManager.subscribeTo(channel, listener, eventNames);<a name="line.217"></a>
+<FONT color="green">218</FONT>    <a name="line.218"></a>
+<FONT color="green">219</FONT>            return channel;<a name="line.219"></a>
+<FONT color="green">220</FONT>        }<a name="line.220"></a>
+<FONT color="green">221</FONT>    <a name="line.221"></a>
+<FONT color="green">222</FONT>        /**<a name="line.222"></a>
+<FONT color="green">223</FONT>         * Subscribes to a {@link com.pusher.client.channel.PresenceChannel} which requires authentication.<a name="line.223"></a>
+<FONT color="green">224</FONT>         *<a name="line.224"></a>
+<FONT color="green">225</FONT>         * @param channelName The name of the channel to subscribe to.<a name="line.225"></a>
+<FONT color="green">226</FONT>         * @return A new {@link com.pusher.client.channel.PresenceChannel} representing the subscription.<a name="line.226"></a>
+<FONT color="green">227</FONT>         * @throws IllegalStateException if a {@link com.pusher.client.Authorizer} has not been set for the {@link Pusher} instance via {@link #Pusher(String, PusherOptions)}.<a name="line.227"></a>
+<FONT color="green">228</FONT>         */<a name="line.228"></a>
+<FONT color="green">229</FONT>        public PresenceChannel subscribePresence(String channelName) {<a name="line.229"></a>
+<FONT color="green">230</FONT>            return subscribePresence(channelName, null);<a name="line.230"></a>
+<FONT color="green">231</FONT>        }<a name="line.231"></a>
+<FONT color="green">232</FONT>    <a name="line.232"></a>
+<FONT color="green">233</FONT>        /**<a name="line.233"></a>
+<FONT color="green">234</FONT>         * Subscribes to a {@link com.pusher.client.channel.PresenceChannel} which requires authentication.<a name="line.234"></a>
+<FONT color="green">235</FONT>         *<a name="line.235"></a>
+<FONT color="green">236</FONT>         * @param channelName The name of the channel to subscribe to.<a name="line.236"></a>
+<FONT color="green">237</FONT>         * @param listener A listener to be informed of Pusher channel protocol, including presence-specific events, and subscription data events.<a name="line.237"></a>
+<FONT color="green">238</FONT>         * @param eventNames An optional list of names of events to be bound to on the channel. The equivalent of calling {@link com.pusher.client.channel.Channel.bind(String, SubscriptionListener)} on or more times.<a name="line.238"></a>
+<FONT color="green">239</FONT>         * @return A new {@link com.pusher.client.channel.PresenceChannel} representing the subscription.<a name="line.239"></a>
+<FONT color="green">240</FONT>         * @throws IllegalStateException if a {@link com.pusher.client.Authorizer} has not been set for the {@link Pusher} instance via {@link #Pusher(String, PusherOptions)}.<a name="line.240"></a>
+<FONT color="green">241</FONT>         */<a name="line.241"></a>
+<FONT color="green">242</FONT>        public PresenceChannel subscribePresence(String channelName, PresenceChannelEventListener listener, String... eventNames) {<a name="line.242"></a>
+<FONT color="green">243</FONT>    <a name="line.243"></a>
+<FONT color="green">244</FONT>            throwExceptionIfNoAuthorizerHasBeenSet();<a name="line.244"></a>
+<FONT color="green">245</FONT>    <a name="line.245"></a>
+<FONT color="green">246</FONT>            PresenceChannelImpl channel = factory.newPresenceChannel(connection, channelName, pusherOptions.getAuthorizer());<a name="line.246"></a>
+<FONT color="green">247</FONT>            channelManager.subscribeTo(channel, listener, eventNames);<a name="line.247"></a>
+<FONT color="green">248</FONT>    <a name="line.248"></a>
+<FONT color="green">249</FONT>            return channel;<a name="line.249"></a>
+<FONT color="green">250</FONT>        }<a name="line.250"></a>
+<FONT color="green">251</FONT>    <a name="line.251"></a>
+<FONT color="green">252</FONT>        /**<a name="line.252"></a>
+<FONT color="green">253</FONT>         * Unsubscribes from a channel using via the name of the channel.<a name="line.253"></a>
+<FONT color="green">254</FONT>         * @param channelName the name of the channel to be unsubscribed from.<a name="line.254"></a>
+<FONT color="green">255</FONT>         *<a name="line.255"></a>
+<FONT color="green">256</FONT>         * @throws IllegalStateException if {@link Pusher.getConnection().getState()} is not {@link com.pusher.client.connection.ConnectionState.CONNECTED CONNECTED}<a name="line.256"></a>
+<FONT color="green">257</FONT>         */<a name="line.257"></a>
+<FONT color="green">258</FONT>        public void unsubscribe(String channelName) {<a name="line.258"></a>
 <FONT color="green">259</FONT>    <a name="line.259"></a>
-<FONT color="green">260</FONT>            channelManager.unsubscribeFrom(channelName);<a name="line.260"></a>
-<FONT color="green">261</FONT>        }<a name="line.261"></a>
-<FONT color="green">262</FONT>    <a name="line.262"></a>
-<FONT color="green">263</FONT>        /* implementation detail */<a name="line.263"></a>
-<FONT color="green">264</FONT>    <a name="line.264"></a>
-<FONT color="green">265</FONT>        private void throwExceptionIfNoAuthorizerHasBeenSet() {<a name="line.265"></a>
-<FONT color="green">266</FONT>            if (pusherOptions.getAuthorizer() == null) {<a name="line.266"></a>
-<FONT color="green">267</FONT>                throw new IllegalStateException("Cannot subscribe to a private or presence channel because no Authorizer has been set. Call PusherOptions.setAuthorizer() before connecting to Pusher");<a name="line.267"></a>
-<FONT color="green">268</FONT>            }<a name="line.268"></a>
-<FONT color="green">269</FONT>        }<a name="line.269"></a>
-<FONT color="green">270</FONT>    }<a name="line.270"></a>
+<FONT color="green">260</FONT>            if (connection.getState() != ConnectionState.CONNECTED) {<a name="line.260"></a>
+<FONT color="green">261</FONT>                throw new IllegalStateException("Cannot unsubscribe from channel " + channelName + " while not connected");<a name="line.261"></a>
+<FONT color="green">262</FONT>            }<a name="line.262"></a>
+<FONT color="green">263</FONT>    <a name="line.263"></a>
+<FONT color="green">264</FONT>            channelManager.unsubscribeFrom(channelName);<a name="line.264"></a>
+<FONT color="green">265</FONT>        }<a name="line.265"></a>
+<FONT color="green">266</FONT>    <a name="line.266"></a>
+<FONT color="green">267</FONT>        /* implementation detail */<a name="line.267"></a>
+<FONT color="green">268</FONT>    <a name="line.268"></a>
+<FONT color="green">269</FONT>        private void throwExceptionIfNoAuthorizerHasBeenSet() {<a name="line.269"></a>
+<FONT color="green">270</FONT>            if (pusherOptions.getAuthorizer() == null) {<a name="line.270"></a>
+<FONT color="green">271</FONT>                throw new IllegalStateException("Cannot subscribe to a private or presence channel because no Authorizer has been set. Call PusherOptions.setAuthorizer() before connecting to Pusher");<a name="line.271"></a>
+<FONT color="green">272</FONT>            }<a name="line.272"></a>
+<FONT color="green">273</FONT>        }<a name="line.273"></a>
+<FONT color="green">274</FONT>    }<a name="line.274"></a>
 
 
 
