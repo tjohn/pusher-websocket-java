@@ -173,9 +173,7 @@ Represents a user that is subscribed to a
 <TD><CODE><B><A HREF="../../../../com/pusher/client/channel/User.html#getInfo(java.lang.Class)">getInfo</A></B>(<A HREF="http://download.oracle.com/javase/6/docs/api/java/lang/Class.html?is-external=true" title="class or interface in java.lang">Class</A>&lt;V&gt;&nbsp;clazz)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Custom additional information about a user decoded as a new instance of the provided POJO bean type
-
- e.g.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Custom additional information about a user decoded as a new instance of the provided POJO bean type</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -269,34 +267,28 @@ public <A HREF="http://download.oracle.com/javase/6/docs/api/java/lang/String.ht
 <A NAME="getInfo(java.lang.Class)"><!-- --></A><H3>
 getInfo</H3>
 <PRE>
-public &lt;V&gt; V <A HREF="../../../../src-html/com/pusher/client/channel/User.html#line.71"><B>getInfo</B></A>(<A HREF="http://download.oracle.com/javase/6/docs/api/java/lang/Class.html?is-external=true" title="class or interface in java.lang">Class</A>&lt;V&gt;&nbsp;clazz)</PRE>
+public &lt;V&gt; V <A HREF="../../../../src-html/com/pusher/client/channel/User.html#line.65"><B>getInfo</B></A>(<A HREF="http://download.oracle.com/javase/6/docs/api/java/lang/Class.html?is-external=true" title="class or interface in java.lang">Class</A>&lt;V&gt;&nbsp;clazz)</PRE>
 <DL>
-<DD>Custom additional information about a user decoded as a new instance of the provided POJO bean type
+<DD><p>Custom additional information about a user decoded as a new instance of the provided POJO bean type</p>
 
- e.g. if <pre>getInfo()</pre> returns <pre>{"name":"Mr User","number":9}</pre>
+ <p>e.g. if <A HREF="../../../../com/pusher/client/channel/User.html#getInfo()"><CODE>getInfo()</CODE></A> returns <code>{"name":"Mr User","number":9}</code> then you might implement as follows:</p>
  <pre>
-       public class UserInfo {
-           private String name;
-           private Integer number;
+ public class UserInfo {
+     private String name;
+     private Integer number;
 
-           public String getName() {
-               return name;
-           }
-           public void setName(String name) {
-               this.name = name;
-           }
-           public Integer getNumber() {
-               return number;
-           }
-           public void setNumber(Integer number) {
-               this.number = number;
-           }
-       }
+     public String getName() { return name; }
+     public void setName(String name) { this.name = name; }
 
-       UserInfo info = user.getInfo(UserInfo.class);
-       info.getName() // returns "Mr User"
-       info.getNumber() // return 9
-       </pre>
+     public Integer getNumber() { return number; }
+     public void setNumber(Integer number) { this.number = number; }
+ }
+
+ UserInfo info = user.getInfo(UserInfo.class);
+
+ info.getName() // returns "Mr User"
+ info.getNumber() // returns 9
+ </pre>
 <P>
 <DD><DL>
 <DT><B>Parameters:</B><DD><CODE>clazz</CODE> - the class into which the user info JSON representation should be parsed.
